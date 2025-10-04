@@ -49,4 +49,4 @@ app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="static")
 # which is perfect for single-page applications that use client-side routing.
 @app.exception_handler(404)
 async def custom_404_handler(_, __):
-    return FileResponse(os.path.join(frontend_dir, 'landing.html'))
+    return FileResponse(os.path.join(frontend_dir, 'index.html'))
