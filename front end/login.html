@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EventHub — Role-based Login</title>
+    <style>
+      :root{
+        /* Color tokens: keep 3–5 total */
+        --bg: #0f2430;          /* deep teal background */
+        --card: rgba(17, 38, 51, 0.6); /* glass card */
+        --text: #e8f0f7;        /* near-white foreground */
+        --muted: #9ab0bf;       /* subtle text */
+        --accent: #f05ca6;      /* pink accent */
+        --ring: rgba(240,92,166,0.45);
+        --radius: 12px;
+        --shadow-lg: 0 10px 30px rgba(0,0,0,0.35);
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        height: 100%;
+        margin: 0;
+        color: var(--text);
+        background: var(--bg);
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        line-height: 1.5;
+      }
+
+      a { color: var(--text); text-underline-offset: 3px; }
+
+      .page {
+        position: relative;
+        min-height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 48px 16px;
+        overflow: hidden;
+      }
+
+      /* Background: subtle gradient + hero image overlay */
+      .page::before{
+        content:"";
+        position:absolute; inset:0;
+        background:
+          radial-gradient(800px 400px at 20% 15%, rgba(52, 211, 208, 0.15), transparent 60%),
+          radial-gradient(700px 360px at 85% 35%, rgba(240, 92, 166, 0.18), transparent 60%),
+          linear-gradient(180deg, rgba(7,18,24,0) 0%, rgba(7,18,24,0.5) 70%, rgba(7,18,24,0.85) 100%),
+          url("https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202025-10-03%20at%209.45.09%E2%80%AFPM.png-GF485U7MedkWhRPHDgPl9d7tZOIodf.jpeg");
+        background-size: cover, cover, cover, cover;
+        background-position: center, center, center, center;
+        filter: saturate(1.05) contrast(1.02) blur(0.2px);
+        opacity: 0.25; /* decorative */
+        z-index: 0;
+      }
+
+      /* Soft glow blobs for depth */
+      .glow {
+        position:absolute; z-index:0; filter: blur(70px);
+        border-radius: 9999px; opacity: 0.35;
+      }
+      .glow.glow-a { width: 420px; height: 420px; background: #36d6c1; top: 10%; left: -6%; }
+      .glow.glow-b { width: 460px; height: 460px; background: #ff6db9; bottom: 5%; right: -8%; opacity: 0.28; }
+
+      /* Header */
+      .nav {
+        position: absolute; top: 12px; left: 0; right: 0;
+        display: flex; align-items: center; justify-content: center;
+        pointer-events: none;
+      }
+      .nav-inner {
+        pointer-events: auto;
+        width: min(1100px, 100%);
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 8px 16px;
+      }
+      .brand {
+        display: inline-flex; align-items: center; gap: 10px;
+        font-weight: 700; letter-spacing: 0.2px;
+      }
+      .badge {
+        display:inline-grid; place-items:center;
+        width: 32px; height: 32px; border-radius: 8px;
+        background: linear-gradient(135deg, #ff8ecf, #f05ca6);
+        color: #14222b; font-weight: 800;
+        box-shadow: 0 6px 18px rgba(240,92,166,0.35);
+      }
+      .nav-links {
+        display: flex; align-items: center; gap: 18px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .nav-links a { color: inherit; text-decoration: none; }
+      .nav-links a[aria-current="page"] { color: var(--text); font-weight: 600; }
+
+      /* Card */
+      .card {
+        position: relative;
+        z-index: 1;
+        width: min(980px, 100%);
+        display: grid;
+        grid-template-columns: 1.1fr 1fr;
+        gap: 0;
+        background: var(--card);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: calc(var(--radius) + 6px);
+        backdrop-filter: blur(14px);
+        box-shadow: var(--shadow-lg);
+        overflow: hidden;
+      }
+
+      /* Left pane: pitch */
+      .pane-hero {
+        padding: 36px 32px 36px 36px;
+        background:
+          radial-gradient(500px 240px at 25% 25%, rgba(54, 214, 193, 0.08), transparent 65%),
+          radial-gradient(520px 300px at 80% 70%, rgba(240, 92, 166, 0.10), transparent 70%);
+        border-right: 1px solid rgba(255,255,255,0.06);
+      }
+      .eyebrow {
+        font-family: ui-serif, "Georgia", "Times New Roman", serif;
+        color: var(--muted);
+        font-style: italic;
+        letter-spacing: 0.4px;
+      }
+      .headline {
+        margin: 8px 0 10px;
+        font-weight: 800;
+        font-size: clamp(24px, 4.2vw, 38px);
+        line-height: 1.15;
+        text-wrap: balance;
+      }
+      .sub {
+        color: var(--muted);
+        font-size: 14px;
+        max-width: 46ch;
+      }
+      .hero-cta {
+        margin-top: 22px;
+        display: inline-flex; align-items: center; gap: 10px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: #0f2531; border: 1px solid rgba(255,255,255,0.08);
+        color: var(--text); text-decoration: none; font-size: 14px;
+      }
+      .chip {
+        display:inline-flex; align-items:center; gap:8px;
+        padding: 6px 10px; border-radius: 999px;
+        background: rgba(240,92,166,0.14); color: var(--text);
+        border: 1px solid rgba(240,92,166,0.25);
+        font-size: 12px; margin-top: 12px;
+      }
+
+      /* Right pane: form */
+      .pane-form {
+        padding: 28px 28px 30px;
+      }
+      form {
+        display: grid; gap: 14px;
+      }
+      .field {
+        display: grid; gap: 8px;
+      }
+      label {
+        font-size: 14px; color: var(--text);
+      }
+      .control {
+        position: relative;
+      }
+      input, select, button {
+        font: inherit; color: var(--text);
+      }
+      input::placeholder { color: rgba(232,240,247,0.5); }
+      input, select {
+        width: 100%;
+        padding: 12px 12px;
+        background: rgba(9,20,27,0.55);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 10px;
+        outline: none;
+        transition: border-color 0.15s, box-shadow 0.15s;
+      }
+      input:focus, select:focus {
+        border-color: var(--ring);
+        box-shadow: 0 0 0 4px rgba(240,92,166,0.12);
+      }
+      .error {
+        font-size: 12px; color: #ff8fb7; min-height: 16px;
+      }
+      .actions {
+        display: grid; gap: 10px; margin-top: 2px;
+      }
+      .btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        gap: 8px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.1);
+        background: #0f2531;
+        cursor: pointer;
+        transition: transform 0.05s ease, box-shadow 0.15s ease, border-color 0.15s;
+      }
+      .btn:hover { border-color: rgba(255,255,255,0.18); }
+      .btn:active { transform: translateY(1px); }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #ff7cc2, #f05ca6);
+        color: #111b22;
+        border: none;
+        box-shadow: 0 8px 20px rgba(240,92,166,0.35);
+        font-weight: 700;
+      }
+
+      .btn-outline {
+        background: rgba(9,20,27,0.55);
+        color: var(--text);
+      }
+
+      .social-row {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+      }
+
+      .help-row {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-top: 6px; font-size: 14px; color: var(--muted);
+      }
+      .help-row a { color: var(--text); }
+
+      .sr-only {
+        position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+        clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+      }
+
+      /* Toast */
+      .toast {
+        position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+        background: rgba(7,18,24,0.9); color: var(--text);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 999px; padding: 10px 14px; font-size: 14px;
+        box-shadow: var(--shadow-lg);
+        opacity: 0; pointer-events: none; transition: opacity 0.25s ease, transform 0.25s ease;
+      }
+      .toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+
+      /* Responsive */
+      @media (max-width: 860px){
+        .card{ grid-template-columns: 1fr; }
+        .pane-hero { border-right: 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page" role="application" aria-label="Role-based login page">
+      <div class="glow glow-a" aria-hidden="true"></div>
+      <div class="glow glow-b" aria-hidden="true"></div>
+
+      <nav class="nav">
+        <div class="nav-inner">
+          <div class="brand">
+            <span class="badge" aria-hidden="true">E</span>
+            <span>EventHub</span>
+          </div>
+         
+        </div>
+      </nav>
+
+      <section class="card" aria-labelledby="login-title">
+        <aside class="pane-hero">
+          <div class="eyebrow">Welcome back</div>
+          <h1 id="login-title" class="headline">One account, every event, zero chaos</h1>
+          <p class="sub">
+            Sign in to plan, orchestrate, and collaborate with organizers, vendors, sponsors, and attendees—all in one place.
+          </p>
+          <a class="hero-cta" href="signup.html">New here? Create an account →</a>
+          <div class="chip" aria-hidden="true">Secure • Role‑aware • Fast</div>
+        </aside>
+
+        <div class="pane-form">
+          <form id="loginForm" novalidate>
+            <div class="field">
+              <label for="role">Role</label>
+              <div class="control">
+                <select id="role" name="role" required aria-describedby="roleError">
+                  <option value="">Select your role</option>
+                  <option>Organizer</option>
+                  <option>Vendor</option>
+                  <option>Attendee</option>
+                  <option>Sponsor</option>
+                </select>
+              </div>
+              <div id="roleError" class="error" aria-live="polite"></div>
+            </div>
+
+            <div class="field">
+              <label for="identity">Email or Username</label>
+              <div class="control">
+                <input id="identity" name="identity" type="text" inputmode="email"
+                       autocomplete="username" placeholder="you@example.com" required
+                       aria-describedby="identityError" />
+              </div>
+              <div id="identityError" class="error" aria-live="polite"></div>
+            </div>
+
+            <div class="field">
+              <label for="password">Password</label>
+              <div class="control">
+                <input id="password" name="password" type="password" autocomplete="current-password"
+                       placeholder="••••••••" required aria-describedby="passwordError" />
+              </div>
+              <div id="passwordError" class="error" aria-live="polite"></div>
+            </div>
+
+            <div class="social-row" aria-label="Social sign-in options (placeholders)">
+              <button type="button" class="btn btn-outline" data-provider="google" aria-label="Continue with Google">
+                Continue with Google
+              </button>
+              <button type="button" class="btn btn-outline" data-provider="linkedin" aria-label="Continue with LinkedIn">
+                Continue with LinkedIn
+              </button>
+            </div>
+
+            <div class="actions">
+              <button type="submit" class="btn btn-primary" id="loginBtn">Login</button>
+            </div>
+
+            <div class="help-row">
+              <span>Don’t have an account?</span>
+              <a href="signup.html" title="Go to role-based signup">Create one →</a>
+            </div>
+
+            <p class="sr-only" id="formStatus" aria-live="polite"></p>
+          </form>
+        </div>
+      </section>
+
+      <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true">Logged in successfully (demo)</div>
+    </div>
+
+    <script>
+      (function(){
+        const form = document.getElementById('loginForm');
+        const toast = document.getElementById('toast');
+        const status = document.getElementById('formStatus');
+
+        const fields = {
+          role: {
+            el: document.getElementById('role'),
+            err: document.getElementById('roleError'),
+            validate: (v) => v.trim() !== '' || 'Please select a role.'
+          },
+          identity: {
+            el: document.getElementById('identity'),
+            err: document.getElementById('identityError'),
+            validate: (v) => v.trim() !== '' || 'Email or username is required.'
+          },
+          password: {
+            el: document.getElementById('password'),
+            err: document.getElementById('passwordError'),
+            validate: (v) => v.trim() !== '' || 'Password is required.'
+          }
+        };
+
+        function setError(field, message){
+          field.el.setAttribute('aria-invalid', message ? 'true' : 'false');
+          field.err.textContent = message || '';
+          if(message){
+            field.el.style.borderColor = 'rgba(255, 143, 183, 0.9)';
+            field.el.style.boxShadow = '0 0 0 4px rgba(255, 143, 183, 0.18)';
+          } else {
+            field.el.style.borderColor = 'rgba(255,255,255,0.08)';
+            field.el.style.boxShadow = 'none';
+          }
+        }
+
+        function validateAll(){
+          let ok = true;
+          for(const key in fields){
+            const f = fields[key];
+            const val = f.el.value;
+            const res = f.validate(val);
+            if(res !== true){ setError(f, res); ok = false; }
+            else setError(f, '');
+          }
+          return ok;
+        }
+
+        // Real-time validation on blur
+        Object.values(fields).forEach(f=>{
+          f.el.addEventListener('blur', ()=> {
+            const res = f.validate(f.el.value);
+            if(res !== true) setError(f, res); else setError(f, '');
+          });
+        });
+
+        // Social placeholders
+        document.querySelectorAll('[data-provider]').forEach(btn=>{
+          btn.addEventListener('click', (e)=>{
+            const provider = btn.getAttribute('data-provider');
+            showToast('Social login via ' + provider + ' is a placeholder in this demo.');
+          });
+        });
+
+        function showToast(msg){
+          toast.textContent = msg;
+          toast.classList.add('show');
+          setTimeout(()=> toast.classList.remove('show'), 2200);
+        }
+
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          if(!validateAll()){
+            status.textContent = 'Please fix the errors above and try again.';
+            return;
+          }
+          
+          const selectedRole = fields.role.el.value.toLowerCase();
+          const payload = {
+            role: selectedRole,
+            identity: fields.identity.el.value,
+            password: '[redacted]'
+          };
+          
+          console.log('[v0] Login payload (demo):', payload);
+          status.textContent = 'Logging in...';
+
+          // Simulate API call delay (600ms)
+          setTimeout(() => {
+            status.textContent = 'Login successful, redirecting...';
+            showToast(`Logged in as ${payload.role}. Redirecting...`);
+
+            let dashboardUrl = '';
+
+            // Map selected role to the correct dashboard URL
+            switch (selectedRole) {
+                case 'organizer':
+                    dashboardUrl = 'organizer dashboard.html';
+                    break;
+                case 'vendor':
+                    dashboardUrl = 'vendor.html';
+                    break;
+                case 'attendee':
+                    dashboardUrl = 'attendee.html';
+                    break;
+                case 'sponsor':
+                    dashboardUrl = 'sponsor.html';
+                    break;
+                default:
+                    // Stop if the role isn't recognized
+                    console.error("Unknown role selected:", selectedRole);
+                    status.textContent = 'Login successful, but dashboard not found.';
+                    return;
+            }
+            
+            // Perform the redirection after a short delay (500ms) for the toast to be seen
+            setTimeout(() => {
+                window.location.href = dashboardUrl;
+            }, 500); 
+            
+
+          }, 600); 
+        });
+      })();
+    </script>
+  </body>
+</html>

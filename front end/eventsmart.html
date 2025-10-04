@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Event Smart Builder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* <CHANGE> Updated to match the teal-purple gradient theme with cream and pink accents */
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --bg-gradient: linear-gradient(135deg, #e8f4f8 0%, #f0e8f8 100%);
+            --text-primary: #1a1a2e;
+            --text-secondary: #4a5568;
+            --text-muted: #718096;
+            --accent-primary: #E91E8C;
+            --accent-secondary: #FF3EA5;
+            --accent-gradient: linear-gradient(135deg, #E91E8C 0%, #FF3EA5 100%);
+            --border-color: #e2e8f0;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+            --cream: #F5E6D3;
+            --teal-dark: #0A3D3D;
+            --purple-dark: #4A1A4A;
+        }
+
+        [data-theme="dark"] {
+            /* <CHANGE> Dark theme with teal-to-purple gradient background */
+            --bg-primary: linear-gradient(135deg, #0A3D3D 0%, #1A4D4D 25%, #3A2A5A 50%, #4A1A4A 75%, #6A2A6A 100%);
+            --bg-secondary: rgba(26, 26, 46, 0.8);
+            --bg-gradient: linear-gradient(135deg, #0A3D3D 0%, #4A1A4A 100%);
+            --text-primary: #F5E6D3;
+            --text-secondary: #e2e8f0;
+            --text-muted: #a0aec0;
+            --accent-primary: #E91E8C;
+            --accent-secondary: #FF3EA5;
+            --accent-gradient: linear-gradient(135deg, #E91E8C 0%, #FF3EA5 100%);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.5);
+            --cream: #F5E6D3;
+            --teal-dark: #0A3D3D;
+            --purple-dark: #4A1A4A;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background 0.3s ease, color 0.3s ease;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* <CHANGE> Added abstract decorative circles like in the reference image */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 10%;
+            right: -10%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(138, 58, 138, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: 20%;
+            right: 5%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(233, 30, 140, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .decorative-circle {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .circle-1 {
+            top: 30%;
+            right: 8%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(74, 26, 74, 0.4) 0%, transparent 70%);
+        }
+
+        .circle-2 {
+            top: 50%;
+            right: 15%;
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, rgba(106, 42, 106, 0.3) 0%, transparent 70%);
+        }
+
+        .circle-3 {
+            bottom: 30%;
+            right: 10%;
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle, rgba(58, 42, 90, 0.35) 0%, transparent 70%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            /* <CHANGE> Dark navy header matching the reference design */
+            background: rgba(10, 20, 30, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px 0;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            /* <CHANGE> Cream colored heading to match reference */
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--cream);
+            letter-spacing: -0.5px;
+        }
+
+        .theme-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(233, 30, 140, 0.2);
+            border-color: var(--accent-primary);
+            transform: scale(1.05);
+        }
+
+        .theme-toggle svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--cream);
+        }
+
+        .wizard-container {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            margin-top: 40px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+        }
+
+        .stepper {
+            display: flex;
+            justify-content: space-between;
+            padding: 40px 60px;
+            background: var(--bg-gradient);
+            position: relative;
+        }
+
+        .stepper::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 60px;
+            right: 60px;
+            height: 3px;
+            background: var(--border-color);
+            transform: translateY(-50%);
+            z-index: 0;
+        }
+
+        .stepper-progress {
+            position: absolute;
+            top: 50%;
+            left: 60px;
+            height: 3px;
+            /* <CHANGE> Pink gradient progress bar */
+            background: var(--accent-gradient);
+            transform: translateY(-50%);
+            transition: width 0.4s ease;
+            z-index: 1;
+            box-shadow: 0 0 10px rgba(233, 30, 140, 0.5);
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+            flex: 1;
+        }
+
+        .step-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--bg-secondary);
+            border: 3px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+            margin-bottom: 12px;
+        }
+
+        .step.active .step-circle {
+            /* <CHANGE> Pink gradient for active step */
+            background: var(--accent-gradient);
+            border-color: var(--accent-primary);
+            color: white;
+            box-shadow: 0 0 20px rgba(233, 30, 140, 0.4);
+            transform: scale(1.1);
+        }
+
+        .step.completed .step-circle {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: white;
+        }
+
+        .step-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-align: center;
+            transition: color 0.3s ease;
+        }
+
+        .step.active .step-label {
+            color: var(--accent-primary);
+        }
+
+        .step.completed .step-label {
+            color: var(--text-secondary);
+        }
+
+        .wizard-content {
+            padding: 50px 60px;
+        }
+
+        .wizard-step {
+            display: none;
+        }
+
+        .wizard-step.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .step-title {
+            /* <CHANGE> Cream colored titles */
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--cream);
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .step-description {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        input, select, textarea {
+            padding: 14px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 1rem;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            /* <CHANGE> Pink border on focus */
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(233, 30, 140, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .suggestions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+
+        .suggestion-category {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .suggestion-category:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 8px 20px rgba(233, 30, 140, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .category-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--cream);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .suggestion-card {
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .suggestion-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateX(4px);
+        }
+
+        .suggestion-card.selected {
+            /* <CHANGE> Pink border and background for selected cards */
+            border-color: var(--accent-primary);
+            background: rgba(233, 30, 140, 0.1);
+        }
+
+        .suggestion-card h4 {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .suggestion-card p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .suggestion-card .price {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .timeline-container {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 30px;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .timeline-header h3 {
+            font-size: 1.4rem;
+            color: var(--cream);
+        }
+
+        .add-timeline-btn {
+            /* <CHANGE> Pink gradient button */
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(233, 30, 140, 0.3);
+        }
+
+        .add-timeline-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(233, 30, 140, 0.4);
+        }
+
+        .timeline-items {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .timeline-item {
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-item:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 4px 12px rgba(233, 30, 140, 0.15);
+        }
+
+        .timeline-item.dragging {
+            opacity: 0.5;
+            transform: scale(0.98);
+        }
+
+        .timeline-info {
+            flex: 1;
+        }
+
+        .timeline-info h4 {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .timeline-info p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .timeline-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .timeline-actions button {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .timeline-actions button:hover {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: white;
+        }
+
+        .review-section {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .review-section h3 {
+            font-size: 1.4rem;
+            color: var(--cream);
+            margin-bottom: 16px;
+        }
+
+        .review-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .review-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .review-item label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .review-item span {
+            font-size: 1rem;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .cost-breakdown {
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .cost-breakdown h4 {
+            font-size: 1.2rem;
+            color: var(--cream);
+            margin-bottom: 16px;
+        }
+
+        .cost-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .cost-item:last-child {
+            border-bottom: none;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--accent-primary);
+            padding-top: 16px;
+            margin-top: 8px;
+            border-top: 2px solid var(--border-color);
+        }
+
+        .export-options {
+            display: flex;
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .export-btn {
+            flex: 1;
+            /* <CHANGE> Pink gradient export buttons */
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(233, 30, 140, 0.3);
+        }
+
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(233, 30, 140, 0.4);
+        }
+
+        .export-btn.secondary {
+            background: transparent;
+            border: 2px solid var(--accent-primary);
+            color: var(--accent-primary);
+            box-shadow: none;
+        }
+
+        .export-btn.secondary:hover {
+            background: rgba(233, 30, 140, 0.1);
+        }
+
+        .wizard-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid var(--border-color);
+        }
+
+        .btn {
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            /* <CHANGE> Pink gradient primary button */
+            background: var(--accent-gradient);
+            color: white;
+            box-shadow: 0 4px 12px rgba(233, 30, 140, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(233, 30, 140, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 2px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+            background: rgba(233, 30, 140, 0.05);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-header h3 {
+            font-size: 1.5rem;
+            color: var(--cream);
+        }
+
+        .close-modal {
+            background: transparent;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: color 0.3s ease;
+        }
+
+        .close-modal:hover {
+            color: var(--accent-primary);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .stepper {
+                padding: 30px 20px;
+            }
+
+            .stepper::before {
+                left: 20px;
+                right: 20px;
+            }
+
+            .stepper-progress {
+                left: 20px;
+            }
+
+            .step-circle {
+                width: 40px;
+                height: 40px;
+                font-size: 0.95rem;
+            }
+
+            .step-label {
+                font-size: 0.75rem;
+            }
+
+            .wizard-content {
+                padding: 30px 20px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .suggestions-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .export-options {
+                flex-direction: column;
+            }
+
+            .wizard-navigation {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- <CHANGE> Added decorative circles for abstract design -->
+    <div class="decorative-circle circle-1"></div>
+    <div class="decorative-circle circle-2"></div>
+    <div class="decorative-circle circle-3"></div>
+
+    <header>
+        <div class="header-content">
+            <h1>AI Event Smart Builder</h1>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                <svg id="sunIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M12 18C8.68629 18 6 15.3137 6 12C6 8.68629 8.68629 6 12 6C15.3137 6 18 8.68629 18 12C18 15.3137 15.3137 18 12 18ZM12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16ZM11 1H13V4H11V1ZM11 20H13V23H11V20ZM3.51472 4.92893L4.92893 3.51472L7.05025 5.63604L5.63604 7.05025L3.51472 4.92893ZM16.9497 18.364L18.364 16.9497L20.4853 19.0711L19.0711 20.4853L16.9497 18.364ZM19.0711 3.51472L20.4853 4.92893L18.364 7.05025L16.9497 5.63604L19.0711 3.51472ZM5.63604 16.9497L7.05025 18.364L4.92893 20.4853L3.51472 19.0711L5.63604 16.9497ZM23 11V13H20V11H23ZM4 11V13H1V11H4Z"></path>
+                </svg>
+                <svg id="moonIcon" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M10 7C10 10.866 13.134 14 17 14C18.9584 14 20.729 13.1957 21.9995 11.8995C22 11.933 22 11.9665 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C12.0335 2 12.067 2 12.1005 2.00049C10.8043 3.27098 10 5.04157 10 7ZM4 12C4 16.4183 7.58172 20 12 20C15.0583 20 17.7158 18.2839 19.062 15.7621C18.3945 15.9187 17.7035 16 17 16C12.0294 16 8 11.9706 8 7C8 6.29648 8.08133 5.60547 8.2379 4.938C5.71611 6.28423 4 8.9417 4 12Z"></path>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="wizard-container">
+            <div class="stepper">
+                <div class="stepper-progress" id="stepperProgress"></div>
+                <div class="step active" data-step="1">
+                    <div class="step-circle">1</div>
+                    <div class="step-label">Event Details</div>
+                </div>
+                <div class="step" data-step="2">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">AI Suggestions</div>
+                </div>
+                <div class="step" data-step="3">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">Timeline</div>
+                </div>
+                <div class="step" data-step="4">
+                    <div class="step-circle">4</div>
+                    <div class="step-label">Review & Export</div>
+                </div>
+            </div>
+
+            <div class="wizard-content">
+                <!-- Step 1: Event Details -->
+                <div class="wizard-step active" data-step="1">
+                    <h2 class="step-title">Tell us about your event</h2>
+                    <p class="step-description">Provide basic information to help our AI generate personalized recommendations</p>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="eventType">Event Type</label>
+                            <select id="eventType">
+                                <option value="">Select event type</option>
+                                <option value="wedding">Wedding</option>
+                                <option value="corporate">Corporate Event</option>
+                                <option value="birthday">Birthday Party</option>
+                                <option value="conference">Conference</option>
+                                <option value="concert">Concert</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="audienceSize">Expected Audience Size</label>
+                            <input type="number" id="audienceSize" placeholder="e.g., 150" min="1">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="budget">Budget (USD)</label>
+                            <input type="number" id="budget" placeholder="e.g., 10000" min="0">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="eventDate">Event Date</label>
+                            <input type="date" id="eventDate">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="location">Location</label>
+                            <input type="text" id="location" placeholder="City, State">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="duration">Duration (hours)</label>
+                            <input type="number" id="duration" placeholder="e.g., 4" min="1">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="specialRequirements">Special Requirements</label>
+                        <textarea id="specialRequirements" placeholder="Any specific needs or preferences..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Step 2: AI Suggestions -->
+                <div class="wizard-step" data-step="2">
+                    <h2 class="step-title">AI-Powered Recommendations</h2>
+                    <p class="step-description">Based on your inputs, we've curated the best vendors and services</p>
+                    
+                    <div class="suggestions-grid" id="suggestionsContainer">
+                        <!-- Suggestions will be dynamically generated -->
+                    </div>
+                </div>
+
+                <!-- Step 3: Timeline -->
+                <div class="wizard-step" data-step="3">
+                    <h2 class="step-title">Event Timeline</h2>
+                    <p class="step-description">Drag and drop to reorder, or add custom timeline items</p>
+                    
+                    <div class="timeline-container">
+                        <div class="timeline-header">
+                            <h3>Schedule</h3>
+                            <button class="add-timeline-btn" id="addTimelineBtn">+ Add Item</button>
+                        </div>
+                        <div class="timeline-items" id="timelineItems">
+                            <!-- Timeline items will be dynamically generated -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Review & Export -->
+                <div class="wizard-step" data-step="4">
+                    <h2 class="step-title">Review Your Event Plan</h2>
+                    <p class="step-description">Everything looks great! Review and export your event plan</p>
+                    
+                    <div class="review-section">
+                        <h3>Event Details</h3>
+                        <div class="review-grid" id="reviewDetails">
+                            <!-- Review details will be populated -->
+                        </div>
+                    </div>
+
+                    <div class="review-section">
+                        <h3>Selected Vendors</h3>
+                        <div id="reviewVendors">
+                            <!-- Selected vendors will be listed -->
+                        </div>
+                        
+                        <div class="cost-breakdown">
+                            <h4>Cost Breakdown</h4>
+                            <div id="costBreakdown">
+                                <!-- Cost breakdown will be populated -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="review-section">
+                        <h3>Event Timeline</h3>
+                        <div id="reviewTimeline">
+                            <!-- Timeline will be listed -->
+                        </div>
+                    </div>
+
+                    <div class="export-options">
+                        <button class="export-btn" id="exportPDF">Export as PDF</button>
+                        <button class="export-btn secondary" id="exportCSV">Export as CSV</button>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="wizard-navigation">
+                    <button class="btn btn-secondary" id="prevBtn" disabled>Previous</button>
+                    <button class="btn btn-primary" id="nextBtn">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for adding/editing timeline items -->
+    <div class="modal" id="timelineModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add Timeline Item</h3>
+                <button class="close-modal" id="closeModal">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="timelineTitle">Title</label>
+                <input type="text" id="timelineTitle" placeholder="e.g., Guest Arrival">
+            </div>
+            <div class="form-group">
+                <label for="timelineTime">Time</label>
+                <input type="time" id="timelineTime">
+            </div>
+            <div class="form-group">
+                <label for="timelineDuration">Duration (minutes)</label>
+                <input type="number" id="timelineDuration" placeholder="e.g., 30" min="1">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="cancelModal">Cancel</button>
+                <button class="btn btn-primary" id="saveTimeline">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let currentStep = 1;
+        const totalSteps = 4;
+        let eventData = {};
+        let selectedVendors = [];
+        let timelineItems = [];
+        let editingTimelineIndex = null;
+
+        // Mock data for AI suggestions
+        const mockVendors = {
+            venues: [
+                { id: 1, name: "Grand Ballroom", description: "Elegant 5000 sq ft space", price: 3500, rating: 4.8 },
+                { id: 2, name: "Garden Pavilion", description: "Outdoor venue with scenic views", price: 2800, rating: 4.6 },
+                { id: 3, name: "Modern Loft", description: "Contemporary industrial space", price: 2200, rating: 4.7 }
+            ],
+            catering: [
+                { id: 4, name: "Gourmet Delights", description: "Full-service catering, 3-course meal", price: 4500, rating: 4.9 },
+                { id: 5, name: "Taste of Italy", description: "Italian cuisine specialist", price: 3800, rating: 4.7 },
+                { id: 6, name: "BBQ Masters", description: "Outdoor BBQ catering", price: 2900, rating: 4.5 }
+            ],
+            entertainment: [
+                { id: 7, name: "DJ Soundwave", description: "Professional DJ with lighting", price: 1200, rating: 4.8 },
+                { id: 8, name: "Live Jazz Band", description: "5-piece jazz ensemble", price: 2500, rating: 4.9 },
+                { id: 9, name: "Photo Booth Pro", description: "Interactive photo booth", price: 800, rating: 4.6 }
+            ]
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeTheme();
+            setupEventListeners();
+            updateStepperProgress();
+        });
+
+        // Theme toggle
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const sunIcon = document.getElementById('sunIcon');
+            const moonIcon = document.getElementById('moonIcon');
+            if (theme === 'dark') {
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            } else {
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            }
+        }
+
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+
+        // Event listeners
+        function setupEventListeners() {
+            document.getElementById('nextBtn').addEventListener('click', nextStep);
+            document.getElementById('prevBtn').addEventListener('click', prevStep);
+            document.getElementById('addTimelineBtn').addEventListener('click', openTimelineModal);
+            document.getElementById('closeModal').addEventListener('click', closeTimelineModal);
+            document.getElementById('cancelModal').addEventListener('click', closeTimelineModal);
+            document.getElementById('saveTimeline').addEventListener('click', saveTimelineItem);
+            document.getElementById('exportPDF').addEventListener('click', exportPDF);
+            document.getElementById('exportCSV').addEventListener('click', exportCSV);
+        }
+
+        // Navigation
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                if (validateStep(currentStep)) {
+                    if (currentStep === 1) {
+                        collectEventData();
+                        generateSuggestions();
+                    } else if (currentStep === 2) {
+                        generateDefaultTimeline();
+                    } else if (currentStep === 3) {
+                        populateReview();
+                    }
+                    
+                    currentStep++;
+                    updateWizard();
+                }
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateWizard();
+            }
+        }
+
+        function updateWizard() {
+            // Update steps
+            document.querySelectorAll('.step').forEach((step, index) => {
+                const stepNum = index + 1;
+                step.classList.remove('active', 'completed');
+                if (stepNum === currentStep) {
+                    step.classList.add('active');
+                } else if (stepNum < currentStep) {
+                    step.classList.add('completed');
+                }
+            });
+
+            // Update wizard steps
+            document.querySelectorAll('.wizard-step').forEach((step, index) => {
+                step.classList.remove('active');
+                if (index + 1 === currentStep) {
+                    step.classList.add('active');
+                }
+            });
+
+            // Update buttons
+            document.getElementById('prevBtn').disabled = currentStep === 1;
+            const nextBtn = document.getElementById('nextBtn');
+            if (currentStep === totalSteps) {
+                nextBtn.textContent = 'Finish';
+                nextBtn.onclick = () => alert('Event plan completed! You can now export your plan.');
+            } else {
+                nextBtn.textContent = 'Next';
+                nextBtn.onclick = nextStep;
+            }
+
+            updateStepperProgress();
+        }
+
+        function updateStepperProgress() {
+            const progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
+            const progressBar = document.getElementById('stepperProgress');
+            const steps = document.querySelectorAll('.step');
+            const stepWidth = steps[0].offsetWidth;
+            const containerPadding = 60;
+            const totalWidth = document.querySelector('.stepper').offsetWidth - (containerPadding * 2);
+            const progressWidth = (totalWidth / (totalSteps - 1)) * (currentStep - 1);
+            progressBar.style.width = progressWidth + 'px';
+        }
+
+        // Validation
+        function validateStep(step) {
+            if (step === 1) {
+                const eventType = document.getElementById('eventType').value;
+                const audienceSize = document.getElementById('audienceSize').value;
+                const budget = document.getElementById('budget').value;
+                
+                if (!eventType || !audienceSize || !budget) {
+                    alert('Please fill in all required fields');
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // Data collection
+        function collectEventData() {
+            eventData = {
+                eventType: document.getElementById('eventType').value,
+                audienceSize: document.getElementById('audienceSize').value,
+                budget: document.getElementById('budget').value,
+                eventDate: document.getElementById('eventDate').value,
+                location: document.getElementById('location').value,
+                duration: document.getElementById('duration').value,
+                specialRequirements: document.getElementById('specialRequirements').value
+            };
+        }
+
+        // Generate AI suggestions
+        function generateSuggestions() {
+            const container = document.getElementById('suggestionsContainer');
+            container.innerHTML = '';
+
+            Object.keys(mockVendors).forEach(category => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'suggestion-category';
+                
+                const categoryTitle = document.createElement('div');
+                categoryTitle.className = 'category-title';
+                categoryTitle.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+                categoryDiv.appendChild(categoryTitle);
+
+                mockVendors[category].forEach(vendor => {
+                    const card = document.createElement('div');
+                    card.className = 'suggestion-card';
+                    card.innerHTML = `
+                        <h4>${vendor.name}</h4>
+                        <p>${vendor.description}</p>
+                        <p class="price">$${vendor.price.toLocaleString()}</p>
+                    `;
+                    card.addEventListener('click', () => toggleVendorSelection(card, vendor));
+                    categoryDiv.appendChild(card);
+                });
+
+                container.appendChild(categoryDiv);
+            });
+        }
+
+        function toggleVendorSelection(card, vendor) {
+            card.classList.toggle('selected');
+            const index = selectedVendors.findIndex(v => v.id === vendor.id);
+            if (index > -1) {
+                selectedVendors.splice(index, 1);
+            } else {
+                selectedVendors.push(vendor);
+            }
+        }
+
+        // Timeline management
+        function generateDefaultTimeline() {
+            if (timelineItems.length === 0) {
+                timelineItems = [
+                    { title: 'Setup & Preparation', time: '14:00', duration: 60 },
+                    { title: 'Guest Arrival', time: '17:00', duration: 30 },
+                    { title: 'Welcome & Opening', time: '17:30', duration: 15 },
+                    { title: 'Main Event', time: '17:45', duration: 120 },
+                    { title: 'Dinner Service', time: '19:45', duration: 60 },
+                    { title: 'Entertainment', time: '20:45', duration: 90 },
+                    { title: 'Closing & Cleanup', time: '22:15', duration: 45 }
+                ];
+                renderTimeline();
+            }
+        }
+
+        function renderTimeline() {
+            const container = document.getElementById('timelineItems');
+            container.innerHTML = '';
+
+            timelineItems.forEach((item, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'timeline-item';
+                itemDiv.draggable = true;
+                itemDiv.dataset.index = index;
+                itemDiv.innerHTML = `
+                    <div class="timeline-info">
+                        <h4>${item.title}</h4>
+                        <p>${item.time} - ${item.duration} minutes</p>
+                    </div>
+                    <div class="timeline-actions">
+                        <button onclick="editTimelineItem(${index})">Edit</button>
+                        <button onclick="deleteTimelineItem(${index})">Delete</button>
+                    </div>
+                `;
+
+                itemDiv.addEventListener('dragstart', handleDragStart);
+                itemDiv.addEventListener('dragover', handleDragOver);
+                itemDiv.addEventListener('drop', handleDrop);
+                itemDiv.addEventListener('dragend', handleDragEnd);
+
+                container.appendChild(itemDiv);
+            });
+        }
+
+        let draggedItem = null;
+
+        function handleDragStart(e) {
+            draggedItem = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+
+            if (draggedItem !== this) {
+                const draggedIndex = parseInt(draggedItem.dataset.index);
+                const targetIndex = parseInt(this.dataset.index);
+
+                const item = timelineItems.splice(draggedIndex, 1)[0];
+                timelineItems.splice(targetIndex, 0, item);
+
+                renderTimeline();
+            }
+
+            return false;
+        }
+
+        function handleDragEnd() {
+            this.classList.remove('dragging');
+        }
+
+        function openTimelineModal(isEdit = false) {
+            document.getElementById('timelineModal').classList.add('active');
+            document.getElementById('modalTitle').textContent = isEdit ? 'Edit Timeline Item' : 'Add Timeline Item';
+            
+            if (!isEdit) {
+                document.getElementById('timelineTitle').value = '';
+                document.getElementById('timelineTime').value = '';
+                document.getElementById('timelineDuration').value = '';
+            }
+        }
+
+        function closeTimelineModal() {
+            document.getElementById('timelineModal').classList.remove('active');
+            editingTimelineIndex = null;
+        }
+
+        function saveTimelineItem() {
+            const title = document.getElementById('timelineTitle').value;
+            const time = document.getElementById('timelineTime').value;
+            const duration = document.getElementById('timelineDuration').value;
+
+            if (!title || !time || !duration) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            const item = { title, time, duration: parseInt(duration) };
+
+            if (editingTimelineIndex !== null) {
+                timelineItems[editingTimelineIndex] = item;
+            } else {
+                timelineItems.push(item);
+            }
+
+            renderTimeline();
+            closeTimelineModal();
+        }
+
+        function editTimelineItem(index) {
+            editingTimelineIndex = index;
+            const item = timelineItems[index];
+            document.getElementById('timelineTitle').value = item.title;
+            document.getElementById('timelineTime').value = item.time;
+            document.getElementById('timelineDuration').value = item.duration;
+            openTimelineModal(true);
+        }
+
+        function deleteTimelineItem(index) {
+            if (confirm('Are you sure you want to delete this timeline item?')) {
+                timelineItems.splice(index, 1);
+                renderTimeline();
+            }
+        }
+
+        // Review and export
+        function populateReview() {
+            // Event details
+            const reviewDetails = document.getElementById('reviewDetails');
+            reviewDetails.innerHTML = `
+                <div class="review-item">
+                    <label>Event Type</label>
+                    <span>${eventData.eventType}</span>
+                </div>
+                <div class="review-item">
+                    <label>Audience Size</label>
+                    <span>${eventData.audienceSize} guests</span>
+                </div>
+                <div class="review-item">
+                    <label>Budget</label>
+                    <span>$${parseInt(eventData.budget).toLocaleString()}</span>
+                </div>
+                <div class="review-item">
+                    <label>Date</label>
+                    <span>${eventData.eventDate || 'Not specified'}</span>
+                </div>
+                <div class="review-item">
+                    <label>Location</label>
+                    <span>${eventData.location || 'Not specified'}</span>
+                </div>
+                <div class="review-item">
+                    <label>Duration</label>
+                    <span>${eventData.duration} hours</span>
+                </div>
+            `;
+
+            // Selected vendors
+            const reviewVendors = document.getElementById('reviewVendors');
+            if (selectedVendors.length > 0) {
+                reviewVendors.innerHTML = selectedVendors.map(vendor => `
+                    <div class="cost-item">
+                        <span>${vendor.name}</span>
+                        <span>$${vendor.price.toLocaleString()}</span>
+                    </div>
+                `).join('');
+            } else {
+                reviewVendors.innerHTML = '<p style="color: var(--text-muted);">No vendors selected</p>';
+            }
+
+            // Cost breakdown
+            const totalCost = selectedVendors.reduce((sum, vendor) => sum + vendor.price, 0);
+            const costBreakdown = document.getElementById('costBreakdown');
+            costBreakdown.innerHTML = `
+                <div class="cost-item">
+                    <span>Subtotal</span>
+                    <span>$${totalCost.toLocaleString()}</span>
+                </div>
+                <div class="cost-item">
+                    <span>Tax (10%)</span>
+                    <span>$${(totalCost * 0.1).toLocaleString()}</span>
+                </div>
+                <div class="cost-item">
+                    <span>Total Estimated Cost</span>
+                    <span>$${(totalCost * 1.1).toLocaleString()}</span>
+                </div>
+            `;
+
+            // Timeline
+            const reviewTimeline = document.getElementById('reviewTimeline');
+            reviewTimeline.innerHTML = timelineItems.map(item => `
+                <div class="cost-item">
+                    <span>${item.title}</span>
+                    <span>${item.time} (${item.duration} min)</span>
+                </div>
+            `).join('');
+        }
+
+        function exportPDF() {
+            alert('PDF export functionality would integrate with a library like jsPDF in production. This would generate a formatted PDF with all event details, vendors, timeline, and cost breakdown.');
+        }
+
+        function exportCSV() {
+            let csv = 'Event Planning Details\n\n';
+            
+            // Event details
+            csv += 'Event Information\n';
+            csv += `Event Type,${eventData.eventType}\n`;
+            csv += `Audience Size,${eventData.audienceSize}\n`;
+            csv += `Budget,$${eventData.budget}\n`;
+            csv += `Date,${eventData.eventDate}\n`;
+            csv += `Location,${eventData.location}\n`;
+            csv += `Duration,${eventData.duration} hours\n\n`;
+
+            // Vendors
+            csv += 'Selected Vendors\n';
+            csv += 'Name,Description,Price\n';
+            selectedVendors.forEach(vendor => {
+                csv += `${vendor.name},"${vendor.description}",$${vendor.price}\n`;
+            });
+            csv += '\n';
+
+            // Timeline
+            csv += 'Event Timeline\n';
+            csv += 'Title,Time,Duration (minutes)\n';
+            timelineItems.forEach(item => {
+                csv += `${item.title},${item.time},${item.duration}\n`;
+            });
+
+            // Download
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'event-plan.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

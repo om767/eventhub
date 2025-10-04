@@ -1,0 +1,4 @@
+- Update backend/main.py to include AuthenticationRouter
+- Update front end/login.html to add theme toggle
+- Update front end/signup.html to add theme toggle and client validation
+- Test the changes

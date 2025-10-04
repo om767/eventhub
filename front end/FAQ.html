@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Event Platform – FAQs</title>
+    <style>
+      :root{
+        /* 3–5 color system matching the provided theme */
+        --bg: #100817;           /* deep purple-black background */
+        --surface: #1b0f27;      /* darker surface for cards */
+        --text: #f2f4f8;         /* off-white foreground */
+        --muted: #c8cad0;        /* neutral/secondary text */
+        --accent: #ff4da6;       /* magenta/pink accent */
+        --accent-2: #2ac8c2;     /* teal/blue accent */
+        --ring: rgba(255, 77, 166, 0.35);
+        --radius: 12px;
+        --shadow: 0 10px 30px rgba(0,0,0,0.35);
+      }
+      /* Base reset */
+      *{box-sizing:border-box}
+      html,body{height:100%}
+      body{
+        margin:0;
+        color:var(--text);
+        background:
+          radial-gradient(1200px 700px at 80% 20%, rgba(255,77,166,0.14), transparent 60%),
+          radial-gradient(900px 600px at 10% 30%, rgba(42,200,194,0.15), transparent 55%),
+          linear-gradient(135deg, #0d1f2a 0%, #2a0d3c 50%, #5a154f 100%);
+        background-color: var(--bg);
+        font: 400 16px/1.55 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
+      }
+      a{color:inherit}
+      .page{
+        min-height:100%;
+        display:flex;
+        flex-direction:column;
+      }
+      header{
+        position:relative;
+        padding:18px 16px;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        max-width:1100px;
+        margin:0 auto;
+      }
+      .brand{
+        font-weight:700;
+        letter-spacing:.2px;
+      }
+      .pill{
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        border:1px solid rgba(255,255,255,0.15);
+        padding:6px 10px;
+        border-radius:999px;
+        color:var(--muted);
+        font-size:13px;
+        text-decoration:none;
+      }
+      main{
+        flex:1;
+        max-width:1100px;
+        margin:0 auto;
+        padding:16px;
+      }
+      .hero{
+        display:flex;
+        flex-direction:column;
+        gap:10px;
+        margin:10px 0 18px;
+        text-align:left;
+      }
+      .hero h1{
+        font-size:clamp(24px, 6vw, 38px);
+        line-height:1.15;
+        margin:0;
+        letter-spacing:.2px;
+        text-wrap:balance;
+      }
+      .hero p{
+        margin:0;
+        color:var(--muted);
+      }
+
+      /* Decorative image from source URL */
+      .backdrop{
+        position:fixed;
+        inset:auto 0 0 auto;
+        right:0;
+        bottom:0;
+        pointer-events:none;
+        opacity:.08;
+        mix-blend-mode:screen;
+        filter:saturate(120%) contrast(110%);
+        max-width:min(520px, 55vw);
+      }
+      .controls{
+        display:grid;
+        gap:12px;
+      }
+      @media (min-width: 768px){
+        .controls{ grid-template-columns: 1fr auto; align-items:end; }
+      }
+
+      .filters{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+        background:rgba(255,255,255,0.04);
+        padding:8px;
+        border-radius:var(--radius);
+        border:1px solid rgba(255,255,255,0.10);
+        box-shadow: var(--shadow);
+      }
+      .filter-btn{
+        appearance:none;
+        border:1px solid transparent;
+        background:transparent;
+        color:var(--muted);
+        padding:8px 12px;
+        border-radius:999px;
+        font-weight:600;
+        font-size:14px;
+        transition:.2s ease;
+        cursor:pointer;
+      }
+      .filter-btn:is(:hover,:focus-visible){
+        border-color:rgba(255,255,255,0.18);
+        outline:none;
+      }
+      .filter-btn[aria-pressed="true"]{
+        color:var(--text);
+        background:
+          linear-gradient(180deg, rgba(255,77,166,0.18), rgba(255,77,166,0.10));
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px var(--ring);
+      }
+
+      .searchbar{
+        display:flex;
+        align-items:center;
+        gap:8px;
+        background:rgba(255,255,255,0.06);
+        border:1px solid rgba(255,255,255,0.10);
+        border-radius:999px;
+        padding:8px 12px;
+        box-shadow: var(--shadow);
+      }
+      .searchbar input{
+        flex:1;
+        background:transparent;
+        border:none;
+        color:var(--text);
+        outline:none;
+        font-size:14px;
+      }
+      .searchbar svg{opacity:.8}
+
+      .actions{
+        display:flex;
+        gap:8px;
+      }
+      .ghost{
+        background:transparent;
+        color:var(--text);
+        border:1px solid rgba(255,255,255,0.18);
+        padding:8px 12px;
+        border-radius:8px;
+        cursor:pointer;
+        font-weight:600;
+      }
+      .ghost:hover{border-color:rgba(255,255,255,0.35)}
+
+      /* Accordion */
+      .accordion{
+        margin-top:16px;
+        display:grid;
+        gap:10px;
+      }
+      .item{
+        background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.05));
+        border: 1px solid rgba(255,255,255,0.10);
+        border-radius:var(--radius);
+        overflow:hidden;
+        box-shadow: var(--shadow);
+      }
+      .trigger{
+        width:100%;
+        display:flex;
+        align-items:center;
+        gap:12px;
+        padding:14px 14px;
+        background:transparent;
+        color:var(--text);
+        border:0;
+        cursor:pointer;
+        text-align:left;
+      }
+      .trigger:focus-visible{
+        outline: 3px solid var(--ring);
+        outline-offset:2px;
+      }
+      .badge{
+        font-size:11px;
+        padding:4px 8px;
+        border-radius:999px;
+        background:rgba(42,200,194,0.18);
+        color:#d7fffb;
+        border:1px solid rgba(42,200,194,0.45);
+        text-transform:uppercase;
+        letter-spacing:.4px;
+        white-space:nowrap;
+      }
+      .q{
+        flex:1;
+        font-weight:700;
+        font-size:15px;
+        letter-spacing:.2px;
+      }
+      .icons{
+        width:24px;height:24px;display:grid;place-items:center;
+      }
+      .icons .minus{display:none}
+      .trigger[aria-expanded="true"] .icons .plus{display:none}
+      .trigger[aria-expanded="true"] .icons .minus{display:block}
+
+      .panel{
+        padding:0 14px 14px;
+        color:var(--muted);
+        display:none;
+      }
+      .panel[data-open="true"]{display:block}
+
+      .empty{
+        display:none;
+        text-align:center;
+        color:var(--muted);
+        padding:24px;
+      }
+      .empty[data-show="true"]{display:block}
+
+      /* Utilities */
+      .sr-only{
+        position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+        overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header aria-label="Top">
+        <div class="brand">Event Platform</div>
+      </header>
+
+      <main>
+        <section class="hero">
+          <h1>Frequently Asked Questions</h1>
+          <p>Search, filter by role, and expand answers. Built for Organizers, Vendors, Attendees, and Sponsors.</p>
+        </section>
+
+         Decorative: use provided image via source URL 
+        <img
+          class="backdrop"
+          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/online-ddUT61tHua6H1mO0yhVFLP2jzFjTsm.jpg"
+          alt="Background reference from product hero showing teal–purple gradient and large headline" />
+
+        <section class="controls" aria-label="FAQ controls">
+          <div class="filters" role="group" aria-label="Filter by role">
+            <button class="filter-btn" data-role="all" aria-pressed="true">All</button>
+            <button class="filter-btn" data-role="Organizer" aria-pressed="false">Organizer</button>
+            <button class="filter-btn" data-role="Vendor" aria-pressed="false">Vendor</button>
+            <button class="filter-btn" data-role="Attendee" aria-pressed="false">Attendee</button>
+            <button class="filter-btn" data-role="Sponsor" aria-pressed="false">Sponsor</button>
+          </div>
+
+          <div>
+            <label class="sr-only" for="faq-search">Search FAQs</label>
+            <div class="searchbar">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M21 21l-4.3-4.3m1.3-5.2a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <input id="faq-search" type="search" placeholder="Search FAQs..." autocomplete="off" />
+            </div>
+          </div>
+
+          <div class="actions" aria-label="Expand or collapse">
+            <button class="ghost" id="expand-all">Expand all</button>
+            <button class="ghost" id="collapse-all">Collapse all</button>
+          </div>
+        </section>
+
+        <section class="accordion" id="faq-list">
+           Example items. data-roles supports multiple roles, comma-separated 
+          <article class="item" data-roles="Organizer,Vendor">
+            <h2 class="sr-only">Question</h2>
+            <button class="trigger" aria-expanded="false" aria-controls="p1" id="t1">
+              <span class="badge">Organizer</span>
+              <span class="q">How do I create and publish an event?</span>
+              <span class="icons" aria-hidden="true">
+                <svg class="plus" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <svg class="minus" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </span>
+            </button>
+            <div class="panel" id="p1" role="region" aria-labelledby="t1" data-open="false">
+              <p>From your dashboard, go to Events → New. Add details (title, date, location), configure tickets, and click Publish. You can save as draft anytime.</p>
+            </div>
+          </article>
+
+          <article class="item" data-roles="Vendor">
+            <button class="trigger" aria-expanded="false" aria-controls="p2" id="t2">
+              <span class="badge">Vendor</span>
+              <span class="q">How do I request a booth and upload compliance docs?</span>
+              <span class="icons" aria-hidden="true">
+                <svg class="plus" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <svg class="minus" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </span>
+            </button>
+            <div class="panel" id="p2" role="region" aria-labelledby="t2" data-open="false">
+              <p>Vendors can apply from the event’s Vendors tab. After approval, upload insurance and permits in the Compliance section of your vendor portal.</p>
+            </div>
+          </article>
+
+          <article class="item" data-roles="Attendee">
+            <button class="trigger" aria-expanded="false" aria-controls="p3" id="t3">
+              <span class="badge">Attendee</span>
+              <span class="q">Where can I access my tickets and receipts?</span>
+              <span class="icons" aria-hidden="true">
+                <svg class="plus" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <svg class="minus" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </span>
+            </button>
+            <div class="panel" id="p3" role="region" aria-labelledby="t3" data-open="false">
+              <p>Log in and open the My Tickets page. You’ll see QR codes, PDFs for download, and all receipts for completed purchases.</p>
+            </div>
+          </article>
+
+          <article class="item" data-roles="Sponsor,Organizer">
+            <button class="trigger" aria-expanded="false" aria-controls="p4" id="t4">
+              <span class="badge">Sponsor</span>
+              <span class="q">How do sponsorship tiers and benefits work?</span>
+              <span class="icons" aria-hidden="true">
+                <svg class="plus" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <svg class="minus" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </span>
+            </button>
+            <div class="panel" id="p4" role="region" aria-labelledby="t4" data-open="false">
+              <p>Select a tier (Bronze → Platinum). Each tier includes brand placements, stage mentions, and booth options. Organizers can customize entitlements.</p>
+            </div>
+          </article>
+
+          <article class="item" data-roles="Organizer">
+            <button class="trigger" aria-expanded="false" aria-controls="p5" id="t5">
+              <span class="badge">Organizer</span>
+              <span class="q">Can I set up approval workflows for speakers and vendors?</span>
+              <span class="icons" aria-hidden="true">
+                <svg class="plus" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <svg class="minus" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </span>
+            </button>
+            <div class="panel" id="p5" role="region" aria-labelledby="t5" data-open="false">
+              <p>Yes. Under Settings → Workflows, enable reviews, define stages, and assign approvers. Notifications are sent automatically at each step.</p>
+            </div>
+          </article>
+
+          <article class="item" data-roles="Vendor,Attendee">
+            <button class="trigger" aria-expanded="false" aria-controls="p6" id="t6">
+              <span class="badge">Vendor</span>
+              <span class="q">What payment methods are supported for invoices and tickets?</span>
+              <span class="icons" aria-hidden="true">
+                <svg class="plus" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <svg class="minus" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </span>
+            </button>
+            <div class="panel" id="p6" role="region" aria-labelledby="t6" data-open="false">
+              <p>We support credit/debit cards, Apple/Google Pay, bank transfers, and invoicing for approved vendor accounts.</p>
+            </div>
+          </article>
+
+          <article class="item" data-roles="Attendee,Sponsor">
+            <button class="trigger" aria-expanded="false" aria-controls="p7" id="t7">
+              <span class="badge">Attendee</span>
+              <span class="q">Is there a mobile app and offline ticket access?</span>
+              <span class="icons" aria-hidden="true">
+                <svg class="plus" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <svg class="minus" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </span>
+            </button>
+            <div class="panel" id="p7" role="region" aria-labelledby="t7" data-open="false">
+              <p>Yes, our iOS and Android apps cache your tickets for offline scanning. Updates sync when you reconnect.</p>
+            </div>
+          </article>
+
+          <article class="item" data-roles="Sponsor">
+            <button class="trigger" aria-expanded="false" aria-controls="p8" id="t8">
+              <span class="badge">Sponsor</span>
+              <span class="q">How do I track ROI and engagement from my sponsorship?</span>
+              <span class="icons" aria-hidden="true">
+                <svg class="plus" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <svg class="minus" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </span>
+            </button>
+            <div class="panel" id="p8" role="region" aria-labelledby="t8" data-open="false">
+              <p>Use the Sponsor Analytics dashboard for impressions, scans, leads, and post-event follow-ups. Export detailed CSVs anytime.</p>
+            </div>
+          </article>
+
+          <article class="item" data-roles="Organizer,Attendee">
+            <button class="trigger" aria-expanded="false" aria-controls="p9" id="t9">
+              <span class="badge">Organizer</span>
+              <span class="q">Can I customize ticket types, fees, and discount codes?</span>
+              <span class="icons" aria-hidden="true">
+                <svg class="plus" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <svg class="minus" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </span>
+            </button>
+            <div class="panel" id="p9" role="region" aria-labelledby="t9" data-open="false">
+              <p>Absolutely. Create tiers, set fees, and add codes (fixed or %). You can limit codes by time, use count, or audience segment.</p>
+            </div>
+          </article>
+
+          <p class="empty" id="empty-state" aria-live="polite">No FAQs match your filters. Try another search or role.</p>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      (function(){
+        const list = document.getElementById('faq-list');
+        const triggers = Array.from(list.querySelectorAll('.trigger'));
+        const search = document.getElementById('faq-search');
+        const empty = document.getElementById('empty-state');
+        const filterBtns = Array.from(document.querySelectorAll('.filter-btn'));
+        const expandAllBtn = document.getElementById('expand-all');
+        const collapseAllBtn = document.getElementById('collapse-all');
+
+        let roleFilter = 'all';
+        let query = '';
+
+        // Accordion behavior
+        triggers.forEach(btn => {
+          btn.addEventListener('click', () => toggleItem(btn));
+          btn.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              toggleItem(btn);
+            }
+          });
+        });
+
+        function toggleItem(btn){
+          const expanded = btn.getAttribute('aria-expanded') === 'true';
+          const panelId = btn.getAttribute('aria-controls');
+          const panel = document.getElementById(panelId);
+          btn.setAttribute('aria-expanded', String(!expanded));
+          panel.dataset.open = String(!expanded);
+        }
+
+        // Filters
+        filterBtns.forEach(b=>{
+          b.addEventListener('click', ()=>{
+            filterBtns.forEach(x=>x.setAttribute('aria-pressed','false'));
+            b.setAttribute('aria-pressed','true');
+            roleFilter = b.dataset.role || 'all';
+            applyFilters();
+          });
+        });
+
+        // Search
+        let t;
+        search.addEventListener('input', () => {
+          clearTimeout(t);
+          t = setTimeout(()=>{
+            query = search.value.trim().toLowerCase();
+            applyFilters();
+          }, 120);
+        });
+
+        // Expand/Collapse visible
+        expandAllBtn.addEventListener('click', ()=>{
+          visibleItems().forEach(item => {
+            const btn = item.querySelector('.trigger');
+            const panel = item.querySelector('.panel');
+            btn.setAttribute('aria-expanded','true');
+            panel.dataset.open = 'true';
+          });
+        });
+        collapseAllBtn.addEventListener('click', ()=>{
+          visibleItems().forEach(item => {
+            const btn = item.querySelector('.trigger');
+            const panel = item.querySelector('.panel');
+            btn.setAttribute('aria-expanded','false');
+            panel.dataset.open = 'false';
+          });
+        });
+
+        function visibleItems(){
+          return Array.from(list.querySelectorAll('.item')).filter(x => x.style.display !== 'none');
+        }
+
+        function applyFilters(){
+          const items = Array.from(list.querySelectorAll('.item'));
+          let visibleCount = 0;
+          items.forEach(item=>{
+            const roles = (item.dataset.roles || '').toLowerCase();
+            const text = item.textContent.toLowerCase();
+            const matchesRole = roleFilter === 'all' ? true : roles.includes(roleFilter.toLowerCase());
+            const matchesQuery = query === '' ? true : text.includes(query);
+            const show = matchesRole && matchesQuery;
+            item.style.display = show ? '' : 'none';
+            if(show) visibleCount++;
+          });
+          empty.dataset.show = String(visibleCount === 0);
+        }
+
+        // Initial run
+        applyFilters();
+      })();
+    </script>
+  </body>
+</html>

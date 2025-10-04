@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sponsor Dashboard | EventHub</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-primary: #0a1628;
+      --bg-secondary: #132039;
+      --bg-card: rgba(19, 32, 57, 0.7);
+      --bg-card-hover: rgba(19, 32, 57, 0.9);
+      --text-primary: #ffffff;
+      --text-secondary: #a0aec0;
+      --text-muted: #718096;
+      --accent-pink: #e91e8c;
+      --accent-purple: #9333ea;
+      --accent-teal: #14b8a6;
+      --accent-gold: #f59e0b;
+      --border-color: rgba(255, 255, 255, 0.1);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    [data-theme="light"] {
+      --bg-primary: #f7fafc;
+      --bg-secondary: #edf2f7;
+      --bg-card: rgba(255, 255, 255, 0.9);
+      --bg-card-hover: rgba(255, 255, 255, 1);
+      --text-primary: #1a202c;
+      --text-secondary: #4a5568;
+      --text-muted: #718096;
+      --border-color: rgba(0, 0, 0, 0.1);
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 20% 30%, rgba(20, 184, 166, 0.15) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 70%, rgba(147, 51, 234, 0.15) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .page-container {
+      position: relative;
+      z-index: 1;
+      padding: 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(233, 30, 140, 0.4);
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      backdrop-filter: blur(10px);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent-pink);
+    }
+
+    .theme-toggle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      transition: all 0.3s ease;
+    }
+
+    .theme-toggle:hover {
+      transform: rotate(20deg);
+      border-color: var(--accent-pink);
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 100px;
+      height: 100px;
+      background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+      opacity: 0.1;
+      border-radius: 50%;
+      transform: translate(30%, -30%);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow);
+      border-color: var(--accent-pink);
+    }
+
+    .stat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+    }
+
+    .stat-label {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-change {
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .stat-change.positive {
+      color: var(--success);
+    }
+
+    .stat-change.negative {
+      color: var(--warning);
+    }
+
+    /* Main Content Grid */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Card */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+
+    .card:hover {
+      border-color: var(--accent-pink);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .card-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .card-action {
+      font-size: 0.75rem;
+      color: var(--accent-pink);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .card-action:hover {
+      color: var(--accent-purple);
+    }
+
+    /* Branding Section */
+    .branding-section {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .logo-preview {
+      width: 100%;
+      height: 150px;
+      border: 2px dashed var(--border-color);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: var(--bg-secondary);
+    }
+
+    .logo-preview:hover {
+      border-color: var(--accent-pink);
+      background: var(--bg-card-hover);
+    }
+
+    .logo-preview img {
+      max-width: 120px;
+      max-height: 120px;
+      object-fit: contain;
+    }
+
+    .upload-text {
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+    }
+
+    .banner-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .banner-item {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s ease;
+    }
+
+    .banner-item:hover {
+      border-color: var(--accent-pink);
+    }
+
+    .banner-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .banner-name {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .banner-stats {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .banner-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .icon-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .icon-btn:hover {
+      border-color: var(--accent-pink);
+      color: var(--accent-pink);
+    }
+
+    /* Calendar */
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.5rem;
+    }
+
+    .calendar-day {
+      aspect-ratio: 1;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.5rem;
+      font-size: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: var(--bg-secondary);
+    }
+
+    .calendar-day:hover {
+      border-color: var(--accent-pink);
+      transform: translateY(-2px);
+    }
+
+    .calendar-day.has-session {
+      background: linear-gradient(135deg, rgba(233, 30, 140, 0.2), rgba(147, 51, 234, 0.2));
+      border-color: var(--accent-pink);
+    }
+
+    .calendar-day-number {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .calendar-session-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-pink);
+    }
+
+    /* Chart Placeholder */
+    .chart-container {
+      width: 100%;
+      height: 300px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chart-svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ROI Tracker */
+    .roi-metrics {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .roi-item {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+
+    .roi-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .roi-label {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .roi-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .roi-progress {
+      width: 100%;
+      height: 8px;
+      background: var(--bg-card);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .roi-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-pink), var(--accent-purple));
+      transition: width 0.3s ease;
+    }
+
+    /* Chat Section */
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: 400px;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .message {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .message-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.875rem;
+      flex-shrink: 0;
+    }
+
+    .message-content {
+      flex: 1;
+    }
+
+    .message-header {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .message-author {
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+
+    .message-time {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .message-text {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .chat-input-container {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .chat-input {
+      flex: 1;
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      resize: none;
+      font-family: inherit;
+    }
+
+    .chat-input:focus {
+      outline: none;
+      border-color: var(--accent-pink);
+      box-shadow: 0 0 0 3px rgba(233, 30, 140, 0.1);
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .page-container {
+        padding: 1rem;
+      }
+
+      .header h1 {
+        font-size: 1.5rem;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stat-value {
+        font-size: 1.5rem;
+      }
+
+      .calendar-grid {
+        grid-template-columns: repeat(7, 1fr);
+        gap: 0.25rem;
+      }
+
+      .calendar-day {
+        font-size: 0.625rem;
+        padding: 0.25rem;
+      }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-pink);
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card, .stat-card {
+      animation: fadeIn 0.5s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container">
+     
+    <header class="header">
+      <h1>Sponsor Dashboard</h1>
+      <div class="header-actions">
+        <button class="btn btn-primary" onclick="openBrandingModal()">
+          <span>⚙️</span>
+          <span>Manage Branding</span>
+        </button>
+        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+          <span id="themeIcon">☀️</span>
+        </button>
+      </div>
+    </header>
+
+     
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="stat-icon">👁️</div>
+        </div>
+        <div class="stat-label">Banner Impressions</div>
+        <div class="stat-value">24,567</div>
+        <div class="stat-change positive">
+          <span>↑</span>
+          <span>12.5% from last week</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="stat-icon">👆</div>
+        </div>
+        <div class="stat-label">Banner Clicks</div>
+        <div class="stat-value">3,421</div>
+        <div class="stat-change positive">
+          <span>↑</span>
+          <span>8.3% from last week</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="stat-icon">🏪</div>
+        </div>
+        <div class="stat-label">Booth Visits</div>
+        <div class="stat-value">1,892</div>
+        <div class="stat-change positive">
+          <span>↑</span>
+          <span>15.7% from last week</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="stat-icon">💬</div>
+        </div>
+        <div class="stat-label">Engagement Rate</div>
+        <div class="stat-value">13.9%</div>
+        <div class="stat-change negative">
+          <span>↓</span>
+          <span>2.1% from last week</span>
+        </div>
+      </div>
+    </div>
+
+    
+    <div class="content-grid">
+     
+      <div style="display: flex; flex-direction: column; gap: 2rem;">
+          
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">ROI Tracker</h3>
+          </div>
+          <div class="roi-metrics">
+            <div class="roi-item">
+              <div class="roi-header">
+                <span class="roi-label">Lead Generation</span>
+                <span class="roi-value">456</span>
+              </div>
+              <div class="roi-progress">
+                <div class="roi-progress-bar" style="width: 76%;"></div>
+              </div>
+            </div>
+
+            <div class="roi-item">
+              <div class="roi-header">
+                <span class="roi-label">Conversion Rate</span>
+                <span class="roi-value">23.4%</span>
+              </div>
+              <div class="roi-progress">
+                <div class="roi-progress-bar" style="width: 23.4%;"></div>
+              </div>
+            </div>
+
+            <div class="roi-item">
+              <div class="roi-header">
+                <span class="roi-label">Attendee Engagement</span>
+                <span class="roi-value">82%</span>
+              </div>
+              <div class="roi-progress">
+                <div class="roi-progress-bar" style="width: 82%;"></div>
+              </div>
+            </div>
+
+            <div class="roi-item">
+              <div class="roi-header">
+                <span class="roi-label">Content Downloads</span>
+                <span class="roi-value">234</span>
+              </div>
+              <div class="roi-progress">
+                <div class="roi-progress-bar" style="width: 65%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Engagement Overview</h3>
+            <span class="card-action">View Details →</span>
+          </div>
+          <div class="chart-container">
+            <svg class="chart-svg" viewBox="0 0 400 300">
+                
+              <g transform="translate(40, 20)">
+                 
+                <rect x="0" y="200" width="50" height="80" fill="url(#gradient1)" rx="4"/>
+                <rect x="70" y="150" width="50" height="130" fill="url(#gradient1)" rx="4"/>
+                <rect x="140" y="100" width="50" height="180" fill="url(#gradient1)" rx="4"/>
+                <rect x="210" y="120" width="50" height="160" fill="url(#gradient1)" rx="4"/>
+                <rect x="280" y="80" width="50" height="200" fill="url(#gradient1)" rx="4"/>
+                
+                  
+                <text x="25" y="295" text-anchor="middle" fill="var(--text-muted)" font-size="12">Mon</text>
+                <text x="95" y="295" text-anchor="middle" fill="var(--text-muted)" font-size="12">Tue</text>
+                <text x="165" y="295" text-anchor="middle" fill="var(--text-muted)" font-size="12">Wed</text>
+                <text x="235" y="295" text-anchor="middle" fill="var(--text-muted)" font-size="12">Thu</text>
+                <text x="305" y="295" text-anchor="middle" fill="var(--text-muted)" font-size="12">Fri</text>
+              </g>
+              
+               
+              <defs>
+                <linearGradient id="gradient1" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" style="stop-color:#e91e8c;stop-opacity:1" />
+                  <stop offset="100%" style="stop-color:#9333ea;stop-opacity:1" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+        </div>
+
+         
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Branding Assets</h3>
+            <span class="card-action" onclick="document.getElementById('logoUpload').click()">Upload New →</span>
+          </div>
+          <div class="branding-section">
+            <div class="logo-preview" onclick="document.getElementById('logoUpload').click()">
+              <span style="font-size: 3rem;">🏢</span>
+              <span class="upload-text">Click to upload sponsor logo</span>
+            </div>
+            <input type="file" id="logoUpload" accept="image/*" style="display: none;" onchange="handleLogoUpload(event)">
+
+            <div class="banner-list">
+              <div class="banner-item">
+                <div class="banner-info">
+                  <span class="banner-name">Hero Banner - Homepage</span>
+                  <span class="banner-stats">1920x400px • 3,421 clicks</span>
+                </div>
+                <div class="banner-actions">
+                  <button class="icon-btn" title="Edit">✏️</button>
+                  <button class="icon-btn" title="Delete">🗑️</button>
+                </div>
+              </div>
+
+              <div class="banner-item">
+                <div class="banner-info">
+                  <span class="banner-name">Sidebar Ad - Event Page</span>
+                  <span class="banner-stats">300x600px • 1,892 clicks</span>
+                </div>
+                <div class="banner-actions">
+                  <button class="icon-btn" title="Edit">✏️</button>
+                  <button class="icon-btn" title="Delete">🗑️</button>
+                </div>
+              </div>
+
+              <div class="banner-item">
+                <div class="banner-info">
+                  <span class="banner-name">Footer Banner</span>
+                  <span class="banner-stats">728x90px • 987 clicks</span>
+                </div>
+                <div class="banner-actions">
+                  <button class="icon-btn" title="Edit">✏️</button>
+                  <button class="icon-btn" title="Delete">🗑️</button>
+                </div>
+              </div>
+            </div>
+
+            <button class="btn btn-secondary" style="width: 100%; justify-content: center;">
+              <span>➕</span>
+              <span>Add New Banner</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 2rem;">
+         
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Sponsored Sessions</h3>
+            <span class="card-action">View All →</span>
+          </div>
+          <div class="calendar-grid" id="calendar">
+             
+          </div>
+        </div>
+
+        
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Engagement Breakdown</h3>
+          </div>
+          <div class="chart-container" style="height: 250px;">
+            <svg class="chart-svg" viewBox="0 0 200 200">
+               Pie Chart 
+              <g transform="translate(100, 100)">
+                 Slice 1 
+                <path d="M 0,-80 A 80,80 0 0,1 69.28,-40 L 0,0 Z" fill="#e91e8c"/>
+                 Slice 2 
+                <path d="M 69.28,-40 A 80,80 0 0,1 69.28,40 L 0,0 Z" fill="#9333ea"/>
+                 Slice 3 
+                <path d="M 69.28,40 A 80,80 0 0,1 0,80 L 0,0 Z" fill="#14b8a6"/>
+                 Slice 4 
+                <path d="M 0,80 A 80,80 0 0,1 0,-80 L 0,0 Z" fill="#f59e0b"/>
+                
+                 
+                <circle cx="0" cy="0" r="45" fill="var(--bg-secondary)"/>
+                <text x="0" y="5" text-anchor="middle" fill="var(--text-primary)" font-size="20" font-weight="bold">100%</text>
+              </g>
+            </svg>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <div style="width: 12px; height: 12px; background: #e91e8c; border-radius: 2px;"></div>
+              <span style="font-size: 0.75rem; color: var(--text-secondary);">Banner Clicks</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <div style="width: 12px; height: 12px; background: #9333ea; border-radius: 2px;"></div>
+              <span style="font-size: 0.75rem; color: var(--text-secondary);">Booth Visits</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <div style="width: 12px; height: 12px; background: #14b8a6; border-radius: 2px;"></div>
+              <span style="font-size: 0.75rem; color: var(--text-secondary);">Downloads</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <div style="width: 12px; height: 12px; background: #f59e0b; border-radius: 2px;"></div>
+              <span style="font-size: 0.75rem; color: var(--text-secondary);">Social Shares</span>
+            </div>
+          </div>
+        </div>
+
+       
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Chat with SPOC</h3>
+            <span class="card-action">🟢 Online</span>
+          </div>
+          <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+              <div class="message">
+                <div class="message-avatar">S</div>
+                <div class="message-content">
+                  <div class="message-header">
+                    <span class="message-author">Sarah (SPOC)</span>
+                    <span class="message-time">10:30 AM</span>
+                  </div>
+                  <div class="message-text">Hi! Your banner is now live on the homepage. Let me know if you need any adjustments.</div>
+                </div>
+              </div>
+
+              <div class="message">
+                <div class="message-avatar" style="background: linear-gradient(135deg, #14b8a6, #3b82f6);">Y</div>
+                <div class="message-content">
+                  <div class="message-header">
+                    <span class="message-author">You</span>
+                    <span class="message-time">10:32 AM</span>
+                  </div>
+                  <div class="message-text">Thanks! Can we increase the booth size for next week?</div>
+                </div>
+              </div>
+
+              <div class="message">
+                <div class="message-avatar">S</div>
+                <div class="message-content">
+                  <div class="message-header">
+                    <span class="message-author">Sarah (SPOC)</span>
+                    <span class="message-time">10:35 AM</span>
+                  </div>
+                  <div class="message-text">I'll send you the upgraded booth options shortly.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="chat-input-container">
+              <textarea class="chat-input" id="messageInput" placeholder="Type a message..." rows="1" onkeypress="handleChatKeyPress(event)"></textarea>
+              <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Theme Toggle
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      html.setAttribute('data-theme', newTheme);
+      document.getElementById('themeIcon').textContent = newTheme === 'light' ? '🌙' : '☀️';
+      localStorage.setItem('theme', newTheme);
+    }
+
+    // Load saved theme
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      document.getElementById('themeIcon').textContent = savedTheme === 'light' ? '🌙' : '☀️';
+      
+      generateCalendar();
+    });
+
+    // Generate Calendar
+    function generateCalendar() {
+      const calendar = document.getElementById('calendar');
+      const sponsoredDays = [5, 12, 18, 25]; // Days with sponsored sessions
+      
+      for (let i = 1; i <= 28; i++) {
+        const day = document.createElement('div');
+        day.className = 'calendar-day';
+        if (sponsoredDays.includes(i)) {
+          day.classList.add('has-session');
+        }
+        
+        const dayNumber = document.createElement('div');
+        dayNumber.className = 'calendar-day-number';
+        dayNumber.textContent = i;
+        day.appendChild(dayNumber);
+        
+        if (sponsoredDays.includes(i)) {
+          const dot = document.createElement('div');
+          dot.className = 'calendar-session-dot';
+          day.appendChild(dot);
+        }
+        
+        day.onclick = () => {
+          if (sponsoredDays.includes(i)) {
+            alert(`Sponsored Session on Day ${i}\nWorkshop: Advanced Marketing Strategies\nTime: 2:00 PM - 4:00 PM`);
+          }
+        };
+        
+        calendar.appendChild(day);
+      }
+    }
+
+    // Logo Upload Handler
+    function handleLogoUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const logoPreview = document.querySelector('.logo-preview');
+          logoPreview.innerHTML = `<img src="${e.target.result}" alt="Sponsor Logo">`;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Chat Functions
+    function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const text = input.value.trim();
+      
+      if (!text) return;
+
+      const chatMessages = document.getElementById('chatMessages');
+      const message = document.createElement('div');
+      message.className = 'message';
+      message.innerHTML = `
+        <div class="message-avatar" style="background: linear-gradient(135deg, #14b8a6, #3b82f6);">Y</div>
+        <div class="message-content">
+          <div class="message-header">
+            <span class="message-author">You</span>
+            <span class="message-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          </div>
+          <div class="message-text">${text}</div>
+        </div>
+      `;
+      
+      chatMessages.appendChild(message);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      input.value = '';
+    }
+
+    function handleChatKeyPress(event) {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    }
+
+    function openBrandingModal() {
+      alert('Branding management modal would open here.\nFeatures:\n- Upload sponsor logo\n- Customize brand colors\n- Manage banner placements\n- Preview branding across site');
+    }
+  </script>
+</body>
+</html>

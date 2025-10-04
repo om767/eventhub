@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attendee Dashboard | EventHub</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-primary: #0a1628;
+      --bg-secondary: #132039;
+      --bg-card: rgba(19, 32, 57, 0.7);
+      --bg-card-hover: rgba(19, 32, 57, 0.9);
+      --text-primary: #ffffff;
+      --text-secondary: #a0aec0;
+      --text-muted: #718096;
+      --accent-pink: #e91e8c;
+      --accent-purple: #9333ea;
+      --accent-teal: #14b8a6;
+      --border-color: rgba(255, 255, 255, 0.1);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    [data-theme="light"] {
+      --bg-primary: #f7fafc;
+      --bg-secondary: #edf2f7;
+      --bg-card: rgba(255, 255, 255, 0.9);
+      --bg-card-hover: rgba(255, 255, 255, 1);
+      --text-primary: #1a202c;
+      --text-secondary: #4a5568;
+      --text-muted: #718096;
+      --border-color: rgba(0, 0, 0, 0.1);
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 20% 30%, rgba(20, 184, 166, 0.15) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 70%, rgba(147, 51, 234, 0.15) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .page-container {
+      position: relative;
+      z-index: 1;
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(233, 30, 140, 0.4);
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      backdrop-filter: blur(10px);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent-pink);
+    }
+
+    .theme-toggle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      transition: all 0.3s ease;
+    }
+
+    .theme-toggle:hover {
+      transform: rotate(20deg);
+      border-color: var(--accent-pink);
+    }
+
+    /* Grid Layout */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+      border-color: var(--accent-pink);
+    }
+
+    .card-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Ticket Section */
+    .ticket-section {
+      grid-column: span 8;
+    }
+
+    .ticket-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .form-label {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .form-input,
+    .form-select {
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      transition: all 0.3s ease;
+    }
+
+    .form-input:focus,
+    .form-select:focus {
+      outline: none;
+      border-color: var(--accent-pink);
+      box-shadow: 0 0 0 3px rgba(233, 30, 140, 0.1);
+    }
+
+    /* QR Ticket Preview */
+    .qr-preview-section {
+      grid-column: span 4;
+    }
+
+    .qr-ticket {
+      background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+      border-radius: 12px;
+      padding: 1.5rem;
+      color: white;
+      text-align: center;
+    }
+
+    .qr-code {
+      width: 150px;
+      height: 150px;
+      background: white;
+      margin: 1rem auto;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      color: #333;
+    }
+
+    .ticket-info {
+      margin-top: 1rem;
+    }
+
+    .ticket-info p {
+      margin: 0.5rem 0;
+      font-size: 0.875rem;
+    }
+
+    /* Schedule Section */
+    .schedule-section {
+      grid-column: span 6;
+    }
+
+    .schedule-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .schedule-item {
+      display: flex;
+      gap: 1rem;
+      padding: 1rem;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      transition: all 0.3s ease;
+    }
+
+    .schedule-item:hover {
+      border-color: var(--accent-teal);
+      transform: translateX(4px);
+    }
+
+    .schedule-time {
+      font-weight: 600;
+      color: var(--accent-pink);
+      min-width: 80px;
+    }
+
+    .schedule-details h4 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .schedule-details p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Event Map */
+    .map-section {
+      grid-column: span 6;
+    }
+
+    .event-map {
+      position: relative;
+      height: 400px;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      border: 2px dashed var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      overflow: hidden;
+    }
+
+    .map-marker {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background: var(--accent-pink);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .map-marker:hover {
+      transform: scale(1.2);
+      box-shadow: 0 4px 12px rgba(233, 30, 140, 0.4);
+    }
+
+    .map-marker:nth-child(1) { top: 20%; left: 30%; }
+    .map-marker:nth-child(2) { top: 40%; left: 60%; }
+    .map-marker:nth-child(3) { top: 60%; left: 40%; }
+    .map-marker:nth-child(4) { top: 30%; left: 70%; }
+
+    /* Polls Section */
+    .polls-section {
+      grid-column: span 6;
+    }
+
+    .poll-question {
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+
+    .poll-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .poll-option {
+      position: relative;
+      padding: 1rem;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+
+    .poll-option:hover {
+      border-color: var(--accent-teal);
+    }
+
+    .poll-option-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .poll-progress {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      background: linear-gradient(90deg, rgba(233, 30, 140, 0.2), rgba(147, 51, 234, 0.2));
+      transition: width 0.5s ease;
+      z-index: 0;
+    }
+
+    /* Q&A Section */
+    .qa-section {
+      grid-column: span 6;
+    }
+
+    .qa-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      max-height: 300px;
+      overflow-y: auto;
+      margin-bottom: 1rem;
+    }
+
+    .qa-item {
+      padding: 1rem;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      border-left: 3px solid var(--accent-purple);
+    }
+
+    .qa-question {
+      font-weight: 600;
+      font-size: 0.875rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .qa-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .qa-input-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .qa-input {
+      flex: 1;
+    }
+
+    /* Gamification Section */
+    .gamification-section {
+      grid-column: span 4;
+    }
+
+    .points-display {
+      text-align: center;
+      padding: 2rem;
+      background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+      border-radius: 12px;
+      color: white;
+      margin-bottom: 1.5rem;
+    }
+
+    .points-value {
+      font-size: 3rem;
+      font-weight: 700;
+    }
+
+    .points-label {
+      font-size: 0.875rem;
+      opacity: 0.9;
+    }
+
+    .badges-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+
+    .badge-item {
+      text-align: center;
+      padding: 1rem;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      transition: all 0.3s ease;
+    }
+
+    .badge-item:hover {
+      border-color: var(--accent-teal);
+      transform: translateY(-4px);
+    }
+
+    .badge-icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .badge-name {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    /* Notifications Section */
+    .notifications-section {
+      grid-column: span 8;
+    }
+
+    .notification-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .notification-item {
+      display: flex;
+      align-items: start;
+      gap: 1rem;
+      padding: 1rem;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      border-left: 3px solid var(--accent-teal);
+      transition: all 0.3s ease;
+    }
+
+    .notification-item:hover {
+      transform: translateX(4px);
+    }
+
+    .notification-icon {
+      font-size: 1.5rem;
+      min-width: 30px;
+    }
+
+    .notification-content h4 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .notification-content p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .notification-time {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .ticket-section,
+      .qr-preview-section,
+      .schedule-section,
+      .map-section,
+      .polls-section,
+      .qa-section,
+      .gamification-section,
+      .notifications-section {
+        grid-column: span 12;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page-container {
+        padding: 1rem;
+      }
+
+      .header h1 {
+        font-size: 1.5rem;
+      }
+
+      .badges-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card {
+      animation: fadeInUp 0.6s ease-out;
+    }
+
+    /* Scrollbar */
+    .schedule-list::-webkit-scrollbar,
+    .qa-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .schedule-list::-webkit-scrollbar-track,
+    .qa-list::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
+      border-radius: 3px;
+    }
+
+    .schedule-list::-webkit-scrollbar-thumb,
+    .qa-list::-webkit-scrollbar-thumb {
+      background: var(--accent-pink);
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container">
+     
+    <header class="header">
+      <h1>Attendee Dashboard</h1>
+      <div class="header-actions">
+        <button class="btn btn-secondary">My Tickets</button>
+        <button class="btn btn-primary">Book Event</button>
+        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+          <span id="themeIcon">☀️</span>
+        </button>
+      </div>
+    </header>
+
+     
+    <div class="dashboard-grid">
+       
+      <div class="card ticket-section">
+        <h2 class="card-title">📅 Book Your Ticket</h2>
+        <form class="ticket-form" onsubmit="generateTicket(event)">
+          <div class="form-group">
+            <label class="form-label" for="eventSelect">Select Event</label>
+            <select id="eventSelect" class="form-select" required>
+              <option value="">Choose an event...</option>
+              <option value="Tech Summit 2025">Tech Summit 2025</option>
+              <option value="Marketing Conference">Marketing Conference</option>
+              <option value="Product Launch Event">Product Launch Event</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="ticketType">Ticket Type</label>
+            <select id="ticketType" class="form-select" required>
+              <option value="">Choose ticket type...</option>
+              <option value="General Admission">General Admission - $99</option>
+              <option value="VIP Pass">VIP Pass - $299</option>
+              <option value="Premium Access">Premium Access - $499</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="attendeeName">Full Name</label>
+            <input type="text" id="attendeeName" class="form-input" placeholder="Enter your name" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="attendeeEmail">Email Address</label>
+            <input type="email" id="attendeeEmail" class="form-input" placeholder="your@email.com" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
+            
+          </button>
+        </form>
+      </div>
+
+       
+      <div class="card qr-preview-section">
+        <h2 class="card-title">🎫 Digital Ticket</h2>
+        <div class="qr-ticket">
+          <h3>EventHub</h3>
+          <div class="qr-code" id="qrCode">
+            <canvas id="qrCanvas" width="130" height="130"></canvas>
+          </div>
+          <div class="ticket-info">
+            <p><strong id="ticketEventName">Tech Summit 2025</strong></p>
+            <p id="ticketHolderName">John Doe</p>
+            <p id="ticketId">Ticket #TK-2025-001</p>
+            <p id="ticketDate">Oct 15, 2025</p>
+          </div>
+          <button class="btn btn-secondary" style="width: 100%; justify-content: center; margin-top: 1rem;" onclick="downloadTicket()">
+            Download Ticket
+          </button>
+        </div>
+      </div>
+
+        
+      <div class="card schedule-section">
+        <h2 class="card-title">🕒 Event Schedule</h2>
+        <div class="schedule-list">
+          <div class="schedule-item">
+            <div class="schedule-time">9:00 AM</div>
+            <div class="schedule-details">
+              <h4>Registration & Breakfast</h4>
+              <p>Main Hall - Welcome desk opens</p>
+            </div>
+          </div>
+          <div class="schedule-item">
+            <div class="schedule-time">10:00 AM</div>
+            <div class="schedule-details">
+              <h4>Opening Keynote</h4>
+              <p>Main Stage - CEO Welcome Address</p>
+            </div>
+          </div>
+          <div class="schedule-item">
+            <div class="schedule-time">11:30 AM</div>
+            <div class="schedule-details">
+              <h4>Breakout Sessions</h4>
+              <p>Rooms A, B, C - Multiple tracks available</p>
+            </div>
+          </div>
+          <div class="schedule-item">
+            <div class="schedule-time">1:00 PM</div>
+            <div class="schedule-details">
+              <h4>Lunch & Networking</h4>
+              <p>Dining Hall - Catered lunch</p>
+            </div>
+          </div>
+          <div class="schedule-item">
+            <div class="schedule-time">2:30 PM</div>
+            <div class="schedule-details">
+              <h4>Panel Discussion</h4>
+              <p>Main Stage - Industry leaders roundtable</p>
+            </div>
+          </div>
+          <div class="schedule-item">
+            <div class="schedule-time">4:00 PM</div>
+            <div class="schedule-details">
+              <h4>Closing Remarks</h4>
+              <p>Main Stage - Event wrap-up</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      
+      <div class="card map-section">
+        <h2 class="card-title">🗺️ Event Map</h2>
+        <div class="event-map">
+          <span>Interactive venue map with booth locations</span>
+          <div class="map-marker" title="Main Stage">🎤</div>
+          <div class="map-marker" title="Registration">📝</div>
+          <div class="map-marker" title="Food Court">🍽️</div>
+          <div class="map-marker" title="Expo Hall">🏢</div>
+        </div>
+      </div>
+
+       
+      <div class="card polls-section">
+        <h2 class="card-title">📊 Live Poll</h2>
+        <div class="poll-question">Which session topic interests you most?</div>
+        <div class="poll-options" id="pollOptions">
+          <div class="poll-option" onclick="vote(0)">
+            <div class="poll-progress" style="width: 35%;"></div>
+            <div class="poll-option-content">
+              <span>AI & Machine Learning</span>
+              <span>35%</span>
+            </div>
+          </div>
+          <div class="poll-option" onclick="vote(1)">
+            <div class="poll-progress" style="width: 28%;"></div>
+            <div class="poll-option-content">
+              <span>Cloud Computing</span>
+              <span>28%</span>
+            </div>
+          </div>
+          <div class="poll-option" onclick="vote(2)">
+            <div class="poll-progress" style="width: 22%;"></div>
+            <div class="poll-option-content">
+              <span>Cybersecurity</span>
+              <span>22%</span>
+            </div>
+          </div>
+          <div class="poll-option" onclick="vote(3)">
+            <div class="poll-progress" style="width: 15%;"></div>
+            <div class="poll-option-content">
+              <span>Blockchain</span>
+              <span>15%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+       
+      <div class="card qa-section">
+        <h2 class="card-title">💬 Q&A Session</h2>
+        <div class="qa-list" id="qaList">
+          <div class="qa-item">
+            <div class="qa-question">What's the WiFi password for attendees?</div>
+            <div class="qa-meta">Asked by Sarah M. • 5 upvotes</div>
+          </div>
+          <div class="qa-item">
+            <div class="qa-question">Will session recordings be available?</div>
+            <div class="qa-meta">Asked by Mike T. • 12 upvotes</div>
+          </div>
+          <div class="qa-item">
+            <div class="qa-question">Are there any networking events tonight?</div>
+            <div class="qa-meta">Asked by Alex K. • 8 upvotes</div>
+          </div>
+        </div>
+        <div class="qa-input-group">
+          <input type="text" id="qaInput" class="form-input qa-input" placeholder="Ask a question...">
+          <button class="btn btn-primary" onclick="askQuestion()">Send</button>
+        </div>
+      </div>
+
+       
+      <div class="card gamification-section">
+        <h2 class="card-title">🏆 Rewards & Achievements</h2>
+        <div class="points-display">
+          <div class="points-value">1,250</div>
+          <div class="points-label">Total Points</div>
+        </div>
+        <h3 style="font-size: 0.875rem; margin-bottom: 1rem; color: var(--text-secondary);">Your Badges</h3>
+        <div class="badges-grid">
+          <div class="badge-item">
+            <div class="badge-icon">⭐</div>
+            <div class="badge-name">Early Bird</div>
+          </div>
+          <div class="badge-item">
+            <div class="badge-icon">🎯</div>
+            <div class="badge-name">Networker</div>
+          </div>
+          <div class="badge-item">
+            <div class="badge-icon">📚</div>
+            <div class="badge-name">Knowledge Seeker</div>
+          </div>
+          <div class="badge-item">
+            <div class="badge-icon">💬</div>
+            <div class="badge-name">Active Participant</div>
+          </div>
+          <div class="badge-item">
+            <div class="badge-icon">🤝</div>
+            <div class="badge-name">Team Player</div>
+          </div>
+          <div class="badge-item">
+            <div class="badge-icon">🔥</div>
+            <div class="badge-name">On Fire</div>
+          </div>
+        </div>
+      </div>
+
+      
+      <div class="card notifications-section">
+        <h2 class="card-title">🔔 Notifications & Reminders</h2>
+        <div class="notification-list">
+          <div class="notification-item">
+            <div class="notification-icon">⏰</div>
+            <div class="notification-content" style="flex: 1;">
+              <h4>Upcoming Session Reminder</h4>
+              <p>Your breakout session "AI in Healthcare" starts in 15 minutes at Room B</p>
+            </div>
+            <div class="notification-time">5 min ago</div>
+          </div>
+          <div class="notification-item">
+            <div class="notification-icon">✅</div>
+            <div class="notification-content" style="flex: 1;">
+              <h4>Ticket Confirmed</h4>
+              <p>Your VIP Pass for Tech Summit 2025 has been confirmed. Check your email for details.</p>
+            </div>
+            <div class="notification-time">1 hour ago</div>
+          </div>
+          <div class="notification-item">
+            <div class="notification-icon">📍</div>
+            <div class="notification-content" style="flex: 1;">
+              <h4>Venue Location Update</h4>
+              <p>Lunch has been moved to the East Dining Hall due to capacity.</p>
+            </div>
+            <div class="notification-time">2 hours ago</div>
+          </div>
+          <div class="notification-item">
+            <div class="notification-icon">🎁</div>
+            <div class="notification-content" style="flex: 1;">
+              <h4>New Reward Unlocked!</h4>
+              <p>You've earned the "Early Bird" badge for checking in on time. +100 points!</p>
+            </div>
+            <div class="notification-time">3 hours ago</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Theme Toggle
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      html.setAttribute('data-theme', newTheme);
+      document.getElementById('themeIcon').textContent = newTheme === 'light' ? '🌙' : '☀️';
+      localStorage.setItem('theme', newTheme);
+    }
+
+    // Load saved theme
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      document.getElementById('themeIcon').textContent = savedTheme === 'light' ? '🌙' : '☀️';
+      drawQRCode();
+    });
+
+    // Generate QR Code (Simple placeholder pattern)
+    function drawQRCode() {
+      const canvas = document.getElementById('qrCanvas');
+      const ctx = canvas.getContext('2d');
+      const size = 130;
+      const blockSize = 5;
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, size, size);
+      
+      ctx.fillStyle = '#000000';
+      for (let i = 0; i < size / blockSize; i++) {
+        for (let j = 0; j < size / blockSize; j++) {
+          if (Math.random() > 0.5) {
+            ctx.fillRect(i * blockSize, j * blockSize, blockSize, blockSize);
+          }
+        }
+      }
+    }
+
+    // Generate Ticket
+    function generateTicket(event) {
+      event.preventDefault();
+      
+      const eventName = document.getElementById('eventSelect').value;
+      const ticketType = document.getElementById('ticketType').value;
+      const attendeeName = document.getElementById('attendeeName').value;
+      const attendeeEmail = document.getElementById('attendeeEmail').value;
+      
+      if (!eventName || !ticketType || !attendeeName || !attendeeEmail) {
+        alert('Please fill in all fields');
+        return;
+      }
+      
+      // Update ticket preview
+      document.getElementById('ticketEventName').textContent = eventName;
+      document.getElementById('ticketHolderName').textContent = attendeeName;
+      document.getElementById('ticketId').textContent = `Ticket #TK-2025-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+      
+      // Regenerate QR code
+      drawQRCode();
+      
+      // Show success message
+      alert('✅ Ticket generated successfully! Check your digital ticket on the right.');
+      
+      // Add notification
+      const notificationList = document.querySelector('.notification-list');
+      const newNotification = document.createElement('div');
+      newNotification.className = 'notification-item';
+      newNotification.innerHTML = `
+        <div class="notification-icon">✅</div>
+        <div class="notification-content" style="flex: 1;">
+          <h4>Ticket Generated</h4>
+          <p>Your ${ticketType} for ${eventName} has been generated successfully!</p>
+        </div>
+        <div class="notification-time">Just now</div>
+      `;
+      notificationList.insertBefore(newNotification, notificationList.firstChild);
+    }
+
+    // Download Ticket
+    function downloadTicket() {
+      alert('📥 Downloading your ticket as PDF...\n\nIn production, this would generate a PDF with your QR code and ticket details.');
+      console.log('[v0] Ticket download requested');
+    }
+
+    // Poll Voting
+    function vote(optionIndex) {
+      alert(`✅ Vote recorded for option ${optionIndex + 1}!\n\nThank you for participating in the poll.`);
+      console.log('[v0] Poll vote:', optionIndex);
+    }
+
+    // Ask Question
+    function askQuestion() {
+      const input = document.getElementById('qaInput');
+      const question = input.value.trim();
+      
+      if (!question) {
+        return;
+      }
+      
+      const qaList = document.getElementById('qaList');
+      const newQuestion = document.createElement('div');
+      newQuestion.className = 'qa-item';
+      newQuestion.innerHTML = `
+        <div class="qa-question">${question}</div>
+        <div class="qa-meta">Asked by You • Just now</div>
+      `;
+      qaList.insertBefore(newQuestion, qaList.firstChild);
+      
+      input.value = '';
+      
+      alert('✅ Your question has been submitted!\n\nIt will be reviewed by the moderators.');
+    }
+
+    // Allow Enter key to submit question
+    document.getElementById('qaInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        askQuestion();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EventHub — Multi‑Role Signup</title>
+  <style>
+    :root{
+      /* Palette: 4 colors + neutrals */
+      --bg: #0e1720;            /* deep teal/blue base */
+      --card: rgba(255,255,255,.06);
+      --card-border: rgba(255,255,255,.14);
+      --text: #e6edf3;          /* high-contrast foreground */
+      --muted: #9fb3c8;         /* secondary text */
+      --primary: #34b6ff;       /* blue/cyan (primary) */
+      --accent: #ff5ea8;        /* pink (accent) */
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box }
+    html, body { height: 100% }
+    body{
+      margin:0;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(52,182,255,.18), transparent 60%),
+        radial-gradient(1000px 500px at 110% 40%, rgba(255,94,168,.16), transparent 60%),
+        radial-gradient(700px 400px at 10% 80%, rgba(255,255,255,.06), transparent 60%),
+        linear-gradient(180deg, #0f2230 0%, var(--bg) 100%);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      line-height: 1.55;
+    }
+
+    /* Decorative reference image from the user (blurred background badge) */
+    .theme-ref{
+      position: fixed;
+      right: 2rem;
+      bottom: 2rem;
+      width: 160px;
+      height: auto;
+      opacity: .08;
+      filter: blur(1px) saturate(0.8);
+      border-radius: 12px;
+      pointer-events: none;
+    }
+
+    header{
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 16px 20px;
+      max-width: 1100px; margin: 0 auto;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      font-weight: 700; letter-spacing:.2px;
+    }
+    .logo{
+      width:32px; height:32px; border-radius: 9px;
+      background: linear-gradient(135deg, var(--accent), #9b5dff);
+      display:grid; place-items:center;
+      color:white; font-size: 18px;
+      box-shadow: 0 6px 18px rgba(255,94,168,.32);
+    }
+    .header-links a{
+      color:var(--muted); text-decoration:none; margin-left:16px; font-weight: 500;
+    }
+    .header-links a:hover{ color:var(--text) }
+
+    main{ padding: 24px; }
+    .shell{
+      max-width: 1100px; margin: 0 auto;
+      display:grid; gap: 24px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 980px){
+      .shell{ grid-template-columns: 1.05fr .95fr }
+    }
+
+    .intro{
+      border:1px solid var(--card-border);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius);
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      min-height: 160px;
+    }
+    .intro::after{
+      content:"";
+      position:absolute; inset: -40% -10% auto auto; height: 280px; width: 280px;
+      background: radial-gradient(closest-side, rgba(255,94,168,.22), transparent 70%);
+      filter: blur(16px);
+      transform: translate(20px, -20px);
+    }
+    .intro h1{
+      margin:0 0 8px; font-size: clamp(28px, 3.6vw, 40px);
+      letter-spacing:.2px; line-height:1.15;
+    }
+    .intro p{ margin:0; color:var(--muted) }
+
+    /* Tabs / Role picker */
+    .tabs{
+      margin-top: 18px;
+      display:flex; flex-wrap: wrap; gap: 10px;
+    }
+    .tab{
+      appearance:none; border:none; background: transparent; color: var(--muted);
+      padding: 10px 14px; border-radius: 999px; cursor:pointer;
+      position: relative; font-weight:600;
+      transition: color .2s ease, transform .12s ease;
+    }
+    .tab[aria-selected="true"]{
+      color: var(--text);
+    }
+    .tab::before{
+      content:"";
+      position:absolute; inset: -2px;
+      border-radius: 999px;
+      background: transparent;
+      transition: background .2s ease, box-shadow .15s ease;
+      z-index:-1;
+    }
+    .tab[aria-selected="true"]::before{
+      background: linear-gradient(135deg, rgba(52,182,255,.25), rgba(255,94,168,.22));
+      box-shadow: 0 6px 18px rgba(52,182,255,.18), inset 0 0 0 1px var(--card-border);
+    }
+    .tab:focus-visible{ outline: 2px solid var(--primary); outline-offset: 2px }
+    .tab:active{ transform: translateY(1px) }
+
+    /* Card with form */
+    .card{
+      border:1px solid var(--card-border);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .card h2{ margin:0 0 14px; font-size: 20px }
+    .helper{ color: var(--muted); font-size: 14px; margin-bottom: 10px }
+
+    /* Stepper */
+    .stepper{
+      display:flex; align-items:center; gap:10px; margin-bottom: 14px;
+    }
+    .dot{
+      width: 26px; height: 26px; border-radius:50%;
+      display:grid; place-items:center; font-size:12px; font-weight:700;
+      background: rgba(255,255,255,.05); border:1px solid var(--card-border); color:var(--muted);
+    }
+    .dot.active{
+      background: linear-gradient(135deg, rgba(52,182,255,.35), rgba(255,94,168,.32));
+      color:#fff; border-color: transparent; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18);
+    }
+    .bar{
+      flex:1; height: 6px; border-radius: 999px; background: rgba(255,255,255,.08);
+      position: relative; overflow:hidden;
+    }
+    .bar .fill{
+      position:absolute; inset:0 auto 0 0; width:0%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      border-radius: 999px; transition: width .25s ease;
+    }
+
+    /* Form controls */
+    .grid{ display:grid; gap:12px }
+    @media (min-width: 640px){ .grid-2{ grid-template-columns: 1fr 1fr } }
+
+    label{ font-size: 14px; color: var(--muted) }
+    input, select{
+      width:100%; padding: 12px 12px; font: inherit; color: var(--text);
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--card-border);
+      border-radius: 10px; outline: none;
+      transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+    input::placeholder{ color: #9fb3c880 }
+    input:focus, select:focus{
+      border-color: rgba(52,182,255,.7);
+      box-shadow: 0 0 0 3px rgba(52,182,255,.22);
+      background: rgba(255,255,255,.09);
+    }
+    .error{ color: #ffd2e0; font-size: 12px; min-height: 14px; opacity:.95 }
+    .hidden{ display:none !important }
+
+    .actions{
+      display:flex; gap:10px; justify-content:flex-end; margin-top: 4px;
+    }
+    .btn{
+      appearance:none; border:none; cursor:pointer; padding: 12px 14px; border-radius: 12px; font-weight:700;
+      color:#0a0f14; background:#e8eef5;
+    }
+    .btn-ghost{
+      color: var(--text); background: transparent; border:1px solid var(--card-border);
+    }
+    .btn-primary{
+      color:#fff;
+      background: linear-gradient(135deg, var(--accent), #9b5dff);
+      box-shadow: 0 10px 24px rgba(255,94,168,.28);
+    }
+    .btn:disabled{ opacity:.6; cursor:not-allowed }
+
+    footer{
+      max-width:1100px; margin: 10px auto 28px; color: var(--muted); font-size: 13px; padding: 0 20px;
+    }
+
+    /* Logo preview */
+    .logo-preview{
+      width: 72px; height:72px; border-radius: 12px; border:1px dashed var(--card-border);
+      display:grid; place-items:center; overflow:hidden; background: rgba(255,255,255,.04);
+      color: var(--muted); font-size: 12px;
+    }
+    .logo-preview img{ width:100%; height:100%; object-fit: cover }
+
+    /* Success toast */
+    .toast{
+      position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(20px);
+      background: rgba(8,14,20,.88); color: var(--text);
+      padding: 12px 14px; border-radius: 12px; border:1px solid var(--card-border);
+      box-shadow: 0 12px 28px rgba(0,0,0,.35);
+      opacity:0; transition: opacity .2s ease, transform .2s ease;
+      font-size: 14px;
+    }
+    .toast.show{ opacity:1; transform: translateX(-50%) translateY(0) }
+  </style>
+</head>
+<body>
+  <img class="theme-ref" src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202025-10-03%20at%209.45.09%E2%80%AFPM.png-yPZbIjtgzJvxNYg229QHXD424SXhlf.jpeg" alt="Reference theme screenshot with teal-to-purple glow and pink CTA" aria-hidden="true" />
+
+  <header aria-label="EventHub">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">E</div>
+      <div>EventHub</div>
+    </div>
+    <nav class="header-links" aria-label="Quick links">
+      <a href="#" aria-current="page">Signup</a>
+      <a href="#">Login</a>
+      <a href="#">Features</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="shell">
+      <div class="intro">
+        <h1 class="text-balance">Create your EventHub account</h1>
+        <p>Choose your role to get a tailored onboarding experience. Switch anytime.</p>
+
+        <div class="tabs" role="tablist" aria-label="Select role">
+          <button class="tab" role="tab" aria-selected="true" id="tab-organizer" data-target="form-organizer">Organizer</button>
+          <button class="tab" role="tab" aria-selected="false" id="tab-vendor" data-target="form-vendor">Vendor</button>
+          <button class="tab" role="tab" aria-selected="false" id="tab-attendee" data-target="form-attendee">Attendee</button>
+          <button class="tab" role="tab" aria-selected="false" id="tab-sponsor" data-target="form-sponsor">Sponsor</button>
+        </div>
+      </div>
+
+      <section class="card" aria-live="polite">
+         Organizer 
+        <form id="form-organizer" data-role="Organizer" novalidate>
+          <h2>Organizer signup</h2>
+          <div class="helper">Plan events with the full suite of tools.</div>
+
+          <div class="stepper" aria-label="Progress">
+            <div class="dot active" data-step-dot>1</div>
+            <div class="bar" aria-hidden="true"><div class="fill" data-step-bar></div></div>
+            <div class="dot" data-step-dot>2</div>
+          </div>
+
+          <div class="grid step-1">
+            <div>
+              <label for="org-name">Full Name</label>
+              <input id="org-name" name="fullName" placeholder="Jane Doe" required />
+              <div class="error" data-error="fullName"></div>
+            </div>
+            <div>
+              <label for="org-company">Company Name</label>
+              <input id="org-company" name="company" placeholder="Eventify Inc." required />
+              <div class="error" data-error="company"></div>
+            </div>
+            <div>
+              <label for="org-type">Event Type</label>
+              <select id="org-type" name="eventType" required>
+                <option value="">Select an event type</option>
+                <option>Conference</option>
+                <option>Wedding</option>
+                <option>Concert</option>
+                <option>Festival</option>
+                <option>Corporate</option>
+              </select>
+              <div class="error" data-error="eventType"></div>
+            </div>
+          </div>
+
+          <div class="grid step-2 hidden">
+            <div class="grid grid-2">
+              <div>
+                <label for="org-email">Email</label>
+                <input id="org-email" type="email" name="email" placeholder="you@example.com" required />
+                <div class="error" data-error="email"></div>
+              </div>
+              <div>
+                <label for="org-pass">Password</label>
+                <input id="org-pass" type="password" name="password" placeholder="••••••••" minlength="6" required />
+                <div class="error" data-error="password"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn btn-ghost" type="button" data-prev hidden>Back</button>
+            <button class="btn btn-primary" type="button" data-next>Continue</button>
+            <button class="btn btn-primary hidden" type="submit" data-submit>Create account</button>
+          </div>
+        </form>
+
+         Vendor 
+        <form id="form-vendor" data-role="Vendor" class="hidden" novalidate>
+          <h2>Vendor signup</h2>
+          <div class="helper">Connect with organizers and showcase your services.</div>
+
+          <div class="stepper" aria-label="Progress">
+            <div class="dot active" data-step-dot>1</div>
+            <div class="bar" aria-hidden="true"><div class="fill" data-step-bar></div></div>
+            <div class="dot" data-step-dot>2</div>
+          </div>
+
+          <div class="grid step-1">
+            <div>
+              <label for="ven-name">Full Name</label>
+              <input id="ven-name" name="fullName" placeholder="Alex Carter" required />
+              <div class="error" data-error="fullName"></div>
+            </div>
+            <div>
+              <label for="ven-category">Service Category</label>
+              <select id="ven-category" name="serviceCategory" required>
+                <option value="">Choose a category</option>
+                <option>Catering</option>
+                <option>Stage</option>
+                <option>Decoration</option>
+                <option>Lighting</option>
+                <option>Photography</option>
+                <option>Security</option>
+              </select>
+              <div class="error" data-error="serviceCategory"></div>
+            </div>
+            <div>
+              <label for="ven-site">Portfolio / Website</label>
+              <input id="ven-site" type="url" name="portfolio" placeholder="https://yourstudio.com" required />
+              <div class="error" data-error="portfolio"></div>
+            </div>
+          </div>
+
+          <div class="grid step-2 hidden">
+            <div class="grid grid-2">
+              <div>
+                <label for="ven-email">Email</label>
+                <input id="ven-email" type="email" name="email" placeholder="you@example.com" required />
+                <div class="error" data-error="email"></div>
+              </div>
+              <div>
+                <label for="ven-pass">Password</label>
+                <input id="ven-pass" type="password" name="password" placeholder="••••••••" minlength="6" required />
+                <div class="error" data-error="password"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn btn-ghost" type="button" data-prev hidden>Back</button>
+            <button class="btn btn-primary" type="button" data-next>Continue</button>
+            <button class="btn btn-primary hidden" type="submit" data-submit>Create account</button>
+          </div>
+        </form>
+
+         Attendee 
+        <form id="form-attendee" data-role="Attendee" class="hidden" novalidate>
+          <h2>Attendee signup</h2>
+          <div class="helper">Join events and manage your tickets.</div>
+
+          <div class="stepper" aria-label="Progress">
+            <div class="dot active" data-step-dot>1</div>
+            <div class="bar" aria-hidden="true"><div class="fill" data-step-bar></div></div>
+            <div class="dot" data-step-dot>2</div>
+          </div>
+
+          <div class="grid step-1">
+            <div>
+              <label for="att-name">Full Name</label>
+              <input id="att-name" name="fullName" placeholder="Sam Taylor" required />
+              <div class="error" data-error="fullName"></div>
+            </div>
+            <div>
+              <label for="att-email">Email</label>
+              <input id="att-email" type="email" name="email" placeholder="you@example.com" required />
+              <div class="error" data-error="email"></div>
+            </div>
+          </div>
+
+          <div class="grid step-2 hidden">
+            <div>
+              <label for="att-ticket">Ticket Selection</label>
+              <select id="att-ticket" name="ticket" required>
+                <option value="">Choose a ticket</option>
+                <option>General — Free</option>
+                <option>Standard — $39</option>
+                <option>VIP — $99</option>
+              </select>
+              <div class="error" data-error="ticket"></div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn btn-ghost" type="button" data-prev hidden>Back</button>
+            <button class="btn btn-primary" type="button" data-next>Continue</button>
+            <button class="btn btn-primary hidden" type="submit" data-submit>Create account</button>
+          </div>
+        </form>
+
+         Sponsor 
+        <form id="form-sponsor" data-role="Sponsor" class="hidden" novalidate>
+          <h2>Sponsor signup</h2>
+          <div class="helper">Boost your brand with presence at top events.</div>
+
+          <div class="stepper" aria-label="Progress">
+            <div class="dot active" data-step-dot>1</div>
+            <div class="bar" aria-hidden="true"><div class="fill" data-step-bar></div></div>
+            <div class="dot" data-step-dot>2</div>
+          </div>
+
+          <div class="grid step-1">
+            <div>
+              <label for="spo-brand">Brand Name</label>
+              <input id="spo-brand" name="brandName" placeholder="Acme Corp" required />
+              <div class="error" data-error="brandName"></div>
+            </div>
+            <div>
+              <label for="spo-booth">Booth Info</label>
+              <input id="spo-booth" name="boothInfo" placeholder="Hall B — Booth 22" required />
+              <div class="error" data-error="boothInfo"></div>
+            </div>
+            <div class="grid grid-2">
+              <div>
+                <label for="spo-logo">Logo Upload</label>
+                <input id="spo-logo" type="file" name="logo" accept="image/*" />
+                <div class="error" data-error="logo"></div>
+              </div>
+              <div class="logo-preview" id="spo-logo-preview" aria-live="polite">Logo</div>
+            </div>
+          </div>
+
+          <div class="grid step-2 hidden">
+            <div class="grid grid-2">
+              <div>
+                <label for="spo-email">Email</label>
+                <input id="spo-email" type="email" name="email" placeholder="you@example.com" required />
+                <div class="error" data-error="email"></div>
+              </div>
+              <div>
+                <label for="spo-pass">Password</label>
+                <input id="spo-pass" type="password" name="password" placeholder="••••••••" minlength="6" required />
+                <div class="error" data-error="password"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn btn-ghost" type="button" data-prev hidden>Back</button>
+            <button class="btn btn-primary" type="button" data-next>Continue</button>
+            <button class="btn btn-primary hidden" type="submit" data-submit>Create account</button>
+            
+          </div>
+        </form>
+      </section>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true">Signed up successfully!</div>
+
+  <footer>
+    Tip: Use the tabs to switch roles. Your inputs are validated before moving to the next step.
+  </footer>
+
+  <script>
+    // Tabs logic
+    const tabs = document.querySelectorAll('.tab');
+    const forms = document.querySelectorAll('form[id^="form-"]');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.setAttribute('aria-selected', 'false'));
+        forms.forEach(f => f.classList.add('hidden'));
+        tab.setAttribute('aria-selected', 'true');
+        document.getElementById(tab.dataset.target).classList.remove('hidden');
+        // Reset visible form to step 1 UI (but keep their typed values)
+        resetToStep1(document.getElementById(tab.dataset.target));
+      });
+    });
+
+    // Step navigation + validation
+    forms.forEach(form => setupStepper(form));
+
+    function setupStepper(form){
+      const step1 = form.querySelector('.step-1');
+      const step2 = form.querySelector('.step-2');
+      const dots = form.querySelectorAll('[data-step-dot]');
+      const bar = form.querySelector('[data-step-bar]');
+      const nextBtn = form.querySelector('[data-next]');
+      const prevBtn = form.querySelector('[data-prev]');
+      const submitBtn = form.querySelector('[data-submit]');
+
+      let step = 1;
+
+      nextBtn?.addEventListener('click', () => {
+        if (!validateStep(step1)) return;
+        step = 2;
+        step1.classList.add('hidden');
+        step2.classList.remove('hidden');
+        dots[0].classList.add('active');
+        dots[1].classList.add('active');
+        bar.style.width = '100%';
+        prevBtn.hidden = false;
+        nextBtn.classList.add('hidden');
+        submitBtn.classList.remove('hidden');
+      });
+
+      prevBtn?.addEventListener('click', () => {
+        step = 1;
+        step2.classList.add('hidden');
+        step1.classList.remove('hidden');
+        dots[1].classList.remove('active');
+        bar.style.width = '0%';
+        prevBtn.hidden = true;
+        submitBtn.classList.add('hidden');
+        nextBtn.classList.remove('hidden');
+      });
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        // When on step 2, validate both steps to be safe
+        if (!validateStep(step1) | !validateStep(step2)) return;
+
+        const formData = new FormData(form);
+        const payload = Object.fromEntries(formData.entries());
+        payload.role = form.dataset.role;
+        
+        // Show toast + log payload
+        console.log("[v0] Signup data:", payload);
+        
+        // --- MODIFIED CODE START ---
+        // 1. Show a final success toast that mentions the redirection.
+        showToast(`Welcome, ${payload.fullName || payload.brandName || 'there'}! Redirecting to login...`);
+        
+        // 2. Delay the redirect for 1 second (1000ms) to allow the user to see the toast.
+        setTimeout(() => {
+            window.location.href = 'login.html'; // This performs the redirection
+        }, 1000); 
+        // --- MODIFIED CODE END ---
+      });
+
+      // Sponsor logo preview
+      const logoInput = form.querySelector('input[type="file"][name="logo"]');
+      const logoPreview = form.querySelector('#spo-logo-preview');
+      if (logoInput && logoPreview){
+        logoInput.addEventListener('change', () => {
+          const file = logoInput.files?.[0];
+          if (file && file.type.startsWith('image/')){
+            const reader = new FileReader();
+            reader.onload = () => {
+              logoPreview.innerHTML = '';
+              const img = new Image();
+              img.crossOrigin = "anonymous";
+              img.src = reader.result;
+              logoPreview.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+          }else{
+            logoPreview.textContent = 'Logo';
+          }
+        });
+      }
+    }
+
+    function validateStep(scope){
+      let valid = true;
+      // Clear previous errors
+      scope.querySelectorAll('.error').forEach(e => e.textContent = '');
+
+      scope.querySelectorAll('input, select, textarea').forEach(field => {
+        if (!field.checkValidity()){
+          valid = false;
+          const key = field.name;
+          const err = scope.querySelector(`[data-error="${key}"]`);
+          if (err){
+            err.textContent = getMessage(field);
+          }
+        }
+      });
+      return valid;
+    }
+
+    function getMessage(field){
+      if (field.validity.valueMissing) return 'This field is required.';
+      if (field.validity.typeMismatch){
+        if (field.type === 'email') return 'Please enter a valid email.';
+        if (field.type === 'url') return 'Please enter a valid URL (include https://).';
+      }
+      if (field.validity.tooShort) return `Must be at least ${field.minLength} characters.`;
+      return 'Please correct this field.';
+    }
+
+    function resetToStep1(form){
+      const step1 = form.querySelector('.step-1');
+      const step2 = form.querySelector('.step-2');
+      const dots = form.querySelectorAll('[data-step-dot]');
+      const bar = form.querySelector('[data-step-bar]');
+      const nextBtn = form.querySelector('[data-next]');
+      const prevBtn = form.querySelector('[data-prev]');
+      const submitBtn = form.querySelector('[data-submit]');
+      // UI reset
+      step2.classList.add('hidden');
+      step1.classList.remove('hidden');
+      if (dots[1]) dots[1].classList.remove('active');
+      if (dots[0]) dots[0].classList.add('active');
+      if (bar) bar.style.width = '0%';
+      if (prevBtn) prevBtn.hidden = true;
+      if (submitBtn) submitBtn.classList.add('hidden');
+      if (nextBtn) nextBtn.classList.remove('hidden');
+      // clear inline errors
+      form.querySelectorAll('.error').forEach(e => e.textContent = '');
+    }
+
+    function showToast(text){
+      const t = document.getElementById('toast');
+      t.textContent = text;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    // Initialize first visible form state
+    resetToStep1(document.getElementById('form-organizer'));
+  </script>
+</body>
+</html>

@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Analytics & Reports | EventHub</title>
+  <style>
+    /* Theme */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root{
+      --bg-primary:#0a1628;
+      --bg-secondary:#132039;
+      --bg-card:rgba(19,32,57,0.7);
+      --bg-card-hover:rgba(19,32,57,0.9);
+      --text-primary:#ffffff;
+      --text-secondary:#a0aec0;
+      --text-muted:#718096;
+      --accent-pink:#e91e8c;
+      --accent-purple:#9333ea;
+      --accent-teal:#14b8a6;
+      --border-color:rgba(255,255,255,0.1);
+      --success:#10b981; --warning:#f59e0b; --danger:#ef4444;
+      --shadow:0 8px 32px rgba(0,0,0,0.3);
+    }
+    [data-theme="light"]{
+      --bg-primary:#f7fafc; --bg-secondary:#edf2f7;
+      --bg-card:rgba(255,255,255,0.9); --bg-card-hover:#fff;
+      --text-primary:#1a202c; --text-secondary:#4a5568; --text-muted:#718096;
+      --border-color:rgba(0,0,0,0.1); --shadow:0 8px 32px rgba(0,0,0,0.1);
+    }
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,Helvetica,sans-serif;
+      background:var(--bg-primary); color:var(--text-primary); line-height:1.6;
+      min-height:100vh; overflow-x:hidden; position:relative;
+    }
+    body::before{
+      content:""; position:fixed; inset:-50%;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(20,184,166,.15), transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(147,51,234,.15), transparent 50%);
+      pointer-events:none; z-index:0;
+    }
+    .container{ position:relative; z-index:1; max-width:1400px; margin:0 auto; padding:2rem; }
+
+    /* Header */
+    .header{ display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+    .brand{ display:flex; align-items:center; gap:.75rem; }
+    .logo{ width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg,var(--accent-pink),var(--accent-purple)); display:grid; place-items:center; font-weight:800; }
+    .title{ font-size:1.6rem; font-weight:800; letter-spacing:.2px; }
+    .header-actions{ display:flex; gap:.75rem; align-items:center; flex-wrap:wrap; }
+    .btn{ border:none; border-radius:10px; padding:.65rem 1rem; font-weight:600; font-size:.9rem; cursor:pointer; transition:.25s ease; display:inline-flex; align-items:center; gap:.5rem; }
+    .btn-primary{ color:#fff; background:linear-gradient(135deg,var(--accent-pink),var(--accent-purple)); }
+    .btn-primary:hover{ transform:translateY(-2px); box-shadow:0 10px 24px rgba(233,30,140,.35); }
+    .btn-ghost{ background:var(--bg-card); border:1px solid var(--border-color); color:var(--text-primary); backdrop-filter:blur(10px); }
+    .btn-ghost:hover{ background:var(--bg-card-hover); border-color:var(--accent-pink); }
+    .toggle{ width:40px; height:40px; border-radius:50%; display:grid; place-items:center; background:var(--bg-card); border:1px solid var(--border-color); cursor:pointer; }
+
+    /* Filters */
+    .filters{ display:flex; gap:.75rem; flex-wrap:wrap; margin-bottom:1.25rem; }
+    .field{ position:relative; }
+    .select, .input{ background:var(--bg-card); border:1px solid var(--border-color); color:var(--text-primary); padding:.65rem .9rem; border-radius:10px; font-size:.9rem; backdrop-filter:blur(10px); }
+    .input::placeholder{ color:var(--text-muted); }
+    .sr-only{ position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
+
+    /* Tabs */
+    .tabs{ display:flex; gap:.5rem; margin-bottom:1rem; border-bottom:1px solid var(--border-color); flex-wrap:wrap; }
+    .tab{ background:transparent; border:none; color:var(--text-secondary); padding:.65rem .9rem; border-radius:10px 10px 0 0; cursor:pointer; font-weight:700; }
+    .tab.active{ color:#fff; background:linear-gradient(135deg,rgba(233,30,140,.25),rgba(147,51,234,.25)); }
+    .tabpanes > section{ display:none; }
+    .tabpanes > section.active{ display:block; }
+
+    /* Cards and grids */
+    .grid{ display:grid; gap:1rem; }
+    .grid-3{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+    .grid-2{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+    @media (max-width:1100px){ .grid-3{ grid-template-columns:1fr; } .grid-2{ grid-template-columns:1fr; } }
+    .card{
+      background:var(--bg-card); border:1px solid var(--border-color); border-radius:16px; padding:1.25rem;
+      box-shadow:var(--shadow); backdrop-filter:blur(12px); transition: .25s ease;
+    }
+    .card:hover{ border-color:var(--accent-pink); transform:translateY(-1px); }
+    .card h3{ font-size:1rem; margin-bottom:.75rem; display:flex; align-items:center; gap:.5rem; }
+    .kpis{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:1rem; margin-bottom:1rem; }
+    .kpi{ background:var(--bg-card); border:1px solid var(--border-color); border-radius:16px; padding:1rem; }
+    .kpi .label{ color:var(--text-muted); font-size:.8rem; text-transform:uppercase; letter-spacing:.5px; }
+    .kpi .value{ font-weight:800; font-size:1.5rem; margin-top:.25rem; }
+    @media (max-width:900px){ .kpis{ grid-template-columns:1fr 1fr; } }
+
+    /* Donut chart */
+    .donut{
+      --p1: 72; /* percent filled */
+      width:220px; height:220px; border-radius:50%;
+      background:
+        conic-gradient(
+          var(--accent-teal) calc(var(--p1)*1%), 
+          rgba(255,255,255,.08) 0
+        );
+      margin:auto; position:relative;
+    }
+    .donut::after{
+      content:""; position:absolute; inset:20px; border-radius:50%;
+      background:var(--bg-secondary); border:1px solid var(--border-color);
+    }
+    .donut-center{
+      position:absolute; inset:0; display:grid; place-items:center; text-align:center;
+      font-weight:800; font-size:1.1rem;
+    }
+    .legend{ display:flex; gap:.75rem; flex-wrap:wrap; justify-content:center; margin-top:.75rem; }
+    .legend .item{ display:flex; gap:.4rem; align-items:center; color:var(--text-secondary); font-size:.85rem; }
+    .dot{ width:10px; height:10px; border-radius:2px; display:inline-block; }
+
+    /* Bar chart (poll results) */
+    .bars{ display:grid; gap:.6rem; }
+    .bar-row{ display:flex; align-items:center; gap:.6rem; }
+    .bar-label{ width:140px; font-size:.9rem; color:var(--text-secondary); }
+    .bar{
+      --w: 40; height:14px; flex:1; border-radius:999px; overflow:hidden; background:rgba(255,255,255,.06); border:1px solid var(--border-color); position:relative;
+    }
+    .bar > span{ position:absolute; left:0; top:0; bottom:0; width:calc(var(--w) * 1%); background:linear-gradient(90deg, var(--accent-pink), var(--accent-purple)); }
+
+    /* Heatmap */
+    .heatmap{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+    .cell{ aspect-ratio:1/1; border-radius:6px; border:1px solid var(--border-color); background:rgba(255,255,255,.06); position:relative; }
+    .cell[data-v]{ background:rgba(233,30,140,.15); }
+    .cell[data-v="2"]{ background:rgba(233,30,140,.25); }
+    .cell[data-v="3"]{ background:rgba(233,30,140,.35); }
+    .cell[data-v="4"]{ background:rgba(233,30,140,.5); }
+    .cell:hover{ outline:2px solid var(--accent-pink); }
+
+    /* Tables */
+    table{ width:100%; border-collapse:separate; border-spacing:0; }
+    th, td{ padding:.75rem 1rem; border-bottom:1px solid var(--border-color); text-align:left; }
+    th{ color:var(--text-secondary); font-weight:700; font-size:.85rem; text-transform:uppercase; letter-spacing:.5px; }
+    .status{ display:inline-flex; align-items:center; gap:.4rem; font-weight:700; font-size:.85rem; }
+    .pill{ padding:.25rem .5rem; border-radius:999px; font-size:.75rem; border:1px solid var(--border-color); }
+    .pill.success{ background:rgba(16,185,129,.2); color:var(--success); }
+    .pill.warning{ background:rgba(245,158,11,.2); color:var(--warning); }
+    .pill.danger{ background:rgba(239,68,68,.2); color:var(--danger); }
+
+    /* Tooltip */
+    .tooltip{ position:fixed; pointer-events:none; background:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text-primary); padding:.4rem .6rem; border-radius:8px; font-size:.75rem; display:none; z-index:50; }
+
+    /* Footer minor */
+    .muted{ color:var(--text-muted); font-size:.85rem; }
+
+    /* Responsive layout areas */
+    .layout{ display:grid; gap:1rem; grid-template-columns:1fr; }
+    .layout .grid-wide{ display:grid; grid-template-columns:2fr 1fr; gap:1rem; }
+    @media (max-width:1100px){ .layout .grid-wide{ grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header" aria-label="Page Header">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">E</div>
+        <div>
+          <div class="title">Analytics & Reports</div>
+          <div class="muted">Insights across attendance, engagement, and partners</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-primary" id="exportCsvBtn" title="Export CSV">⬇ Export CSV</button>
+        <button class="btn btn-ghost" id="exportPdfBtn" title="Export PDF (Print)">🖨 Export PDF</button>
+        <button class="toggle" id="themeToggle" aria-label="Toggle theme"><span id="themeIcon">☀</span></button>
+      </div>
+    </header>
+
+     
+    <section class="filters" aria-label="Filters">
+      <label class="sr-only" for="eventSelect">Event</label>
+      <select id="eventSelect" class="select">
+        <option value="all">All Events</option>
+        <option value="conf-2025">Annual Conference 2025</option>
+        <option value="tech-expo">Tech Expo</option>
+        <option value="music-fest">Music Fest</option>
+      </select>
+
+      <label class="sr-only" for="vendorSelect">Vendor</label>
+      <select id="vendorSelect" class="select">
+        <option value="all">All Vendors</option>
+        <option>Catering Co.</option>
+        <option>LightMasters AV</option>
+        <option>Elegant Decor</option>
+        <option>City Transport</option>
+      </select>
+
+      <label class="sr-only" for="sponsorSelect">Sponsor</label>
+      <select id="sponsorSelect" class="select">
+        <option value="all">All Sponsors</option>
+        <option>Acme Corp</option>
+        <option>Globex</option>
+        <option>Innotech</option>
+      </select>
+
+      <label class="sr-only" for="searchInput">Search</label>
+      <input id="searchInput" class="input" placeholder="Search reports..." />
+    </section>
+
+     
+    <nav class="tabs" role="tablist" aria-label="Report Sections">
+      <button class="tab active" role="tab" aria-selected="true" data-tab="overview">Overview</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="vendors">Vendors</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="sponsors">Sponsors</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="attendees">Attendees</button>
+    </nav>
+
+    <main class="tabpanes">
+       
+      <section id="pane-overview" class="active" aria-labelledby="overview">
+        <div class="kpis">
+          <div class="kpi">
+            <div class="label">Total Attendance</div>
+            <div class="value" id="kpiAttendance">3,240</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Engagement Score</div>
+            <div class="value"><span id="kpiEngagement">86</span>/100</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Feedback Avg</div>
+            <div class="value">4.5★</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Sessions Rated</div>
+            <div class="value" id="kpiSessions">128</div>
+          </div>
+        </div>
+
+        <div class="layout">
+          <div class="grid-wide">
+             Donut: check-ins vs capacity 
+            <article class="card" aria-label="Attendance vs Capacity">
+              <h3>Attendance vs Capacity</h3>
+              <div class="donut" id="donutAttendance" aria-hidden="true">
+                <div class="donut-center"><div><span id="donutPct">72%</span><br/><span class="muted">Checked-in</span></div></div>
+              </div>
+              <div class="legend" aria-hidden="true">
+                <div class="item"><span class="dot" style="background:var(--accent-teal)"></span> Checked-in</div>
+                <div class="item"><span class="dot" style="background:rgba(255,255,255,.08)"></span> Remaining</div>
+              </div>
+            </article>
+
+            
+            <article class="card" aria-label="Popular Sessions Heatmap">
+              <h3>Popularity Heatmap (By Time)</h3>
+              <div id="heatmap" class="heatmap" style="margin-top:.5rem"></div>
+              <p class="muted" style="margin-top:.75rem">Darker cells indicate higher attendance or engagement.</p>
+            </article>
+          </div>
+
+           
+          <article class="card">
+            <h3>Live Poll Results</h3>
+            <div class="bars" id="pollBars" style="margin-top:.5rem">
+               
+            </div>
+          </article>
+
+           
+          <article class="card">
+            <h3>Feedback Summary</h3>
+            <ul style="color:var(--text-secondary); display:grid; gap:.5rem; margin-top:.25rem">
+              <li>Top-rated Session: AI for Events (4.8★)</li>
+              <li>Most Mentioned Positive: Organization & Schedule</li>
+              <li>Top Improvement: More seating near main stage</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      
+      <section id="pane-vendors" aria-labelledby="vendors">
+        <article class="card">
+          <h3>Vendor Performance</h3>
+          <div class="muted" style="margin-bottom:.6rem">Filtered by your selections above.</div>
+          <div class="card" style="padding:0">
+            <table aria-label="Vendors Table">
+              <thead><tr><th>Vendor</th><th>Category</th><th>SLA Met</th><th>Avg Rating</th><th>Sessions Served</th><th>Status</th></tr></thead>
+              <tbody id="vendorTbody">
+                 rows via JS 
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+       
+      <section id="pane-sponsors" aria-labelledby="sponsors">
+        <article class="card">
+          <h3>Sponsor Impact</h3>
+          <div class="grid grid-2" style="margin-top:.5rem">
+            <div class="card">
+              <h3>Impressions (Bar)</h3>
+              <div id="sponsorBars"></div>
+            </div>
+            <div class="card">
+              <h3>Lead Captures</h3>
+              <table>
+                <thead><tr><th>Sponsor</th><th>Leads</th><th>CTR</th><th>Status</th></tr></thead>
+                <tbody id="sponsorLeads"></tbody>
+              </table>
+            </div>
+          </div>
+        </article>
+      </section>
+
+       
+      <section id="pane-attendees" aria-labelledby="attendees">
+        <div class="grid grid-2">
+          <article class="card">
+            <h3>Attendance by Day</h3>
+            <div id="dayBars"></div>
+          </article>
+          <article class="card">
+            <h3>Engagement Over Time</h3>
+            <div id="engLine" style="height:160px; position:relative"></div>
+            <p class="muted" style="margin-top:.5rem">Simulated trend. Hover points for details.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <div class="tooltip" id="tooltip" role="tooltip"></div>
+  </div>
+
+  <script>
+    // Theme toggle
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    themeIcon.textContent = savedTheme === 'light' ? '🌙' : '☀';
+    themeToggle.addEventListener('click', () => {
+      const html = document.documentElement;
+      const next = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      html.setAttribute('data-theme', next);
+      themeIcon.textContent = next === 'light' ? '🌙' : '☀';
+      localStorage.setItem('theme', next);
+    });
+
+    // Tabs
+    document.querySelectorAll('.tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const tab = btn.dataset.tab;
+        document.querySelectorAll('.tabpanes > section').forEach(sec => sec.classList.remove('active'));
+        document.getElementById('pane-' + tab).classList.add('active');
+      });
+    });
+
+    // Mock datasets
+    const overview = {
+      capacity: 4500, checkedIn: 3240,
+      heatmap: Array.from({length:42}, (_,i)=> Math.ceil(Math.random()*4) - (Math.random()>.7?1:0)), // 7x6 grid
+      poll: [
+        { label: 'Food', value: 68 },
+        { label: 'Content', value: 82 },
+        { label: 'Networking', value: 74 },
+        { label: 'Venue', value: 55 }
+      ]
+    };
+
+    const vendors = [
+      { name:'Delicious Bites Catering', category:'Catering', sla: '98%', rating:'4.6', sessions: 24, status:'Active' },
+      { name:'LightMasters AV', category:'Audio/Visual', sla: '96%', rating:'4.5', sessions: 31, status:'Active' },
+      { name:'Elegant Decor Co.', category:'Decoration', sla: '94%', rating:'4.3', sessions: 18, status:'Active' },
+      { name:'City Transport', category:'Transport', sla: '92%', rating:'4.2', sessions: 40, status:'Attention' },
+    ];
+
+    const sponsors = [
+      { name:'Acme Corp', impressions: 54000, leads: 420, ctr:'3.1%', status:'Primary' },
+      { name:'Globex', impressions: 41000, leads: 330, ctr:'2.7%', status:'Gold' },
+      { name:'Innotech', impressions: 29500, leads: 210, ctr:'2.2%', status:'Silver' },
+    ];
+
+    const attendees = {
+      byDay: [
+        { day:'Day 1', value: 1120 },
+        { day:'Day 2', value: 1280 },
+        { day:'Day 3', value: 840  },
+      ],
+      engagement: Array.from({length:20}, (_,i)=>({ x:i, y: 60 + Math.round(20*Math.sin(i/2))+ Math.round(Math.random()*5)}))
+    };
+
+    // KPIs dynamic
+    const pct = Math.round(overview.checkedIn / overview.capacity * 100);
+    document.getElementById('donutAttendance').style.setProperty('--p1', pct);
+    document.getElementById('donutPct').textContent = pct + '%';
+    document.getElementById('kpiAttendance').textContent = overview.checkedIn.toLocaleString();
+    document.getElementById('kpiSessions').textContent = (120 + Math.floor(Math.random()*20));
+    // playful "live" engagement nudge
+    const engEl = document.getElementById('kpiEngagement');
+    setInterval(()=> {
+      const base = parseInt(engEl.textContent, 10);
+      const next = Math.max(70, Math.min(95, base + (Math.random()>.5?1:-1)));
+      engEl.textContent = next;
+    }, 3000);
+
+    // Heatmap build
+    const heatmap = document.getElementById('heatmap');
+    const tooltip = document.getElementById('tooltip');
+    overview.heatmap.forEach((v, idx) => {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      const level = Math.max(0, Math.min(4, v));
+      if (level>0) cell.setAttribute('data-v', String(level));
+      const day = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][idx%7];
+      const slot = 'T' + (Math.floor(idx/7)+1);
+      cell.dataset.tip = `${day} ${slot}: ${level===0?'low':'lvl '+level}`;
+      cell.addEventListener('mousemove', (e)=> showTip(e, cell.dataset.tip));
+      cell.addEventListener('mouseleave', hideTip);
+      heatmap.appendChild(cell);
+    });
+
+    // Poll bars
+    const pollBars = document.getElementById('pollBars');
+    overview.poll.forEach(p => {
+      const row = document.createElement('div'); row.className='bar-row';
+      const label = document.createElement('div'); label.className='bar-label'; label.textContent = p.label;
+      const bar = document.createElement('div'); bar.className='bar'; bar.style.setProperty('--w', p.value);
+      const fill = document.createElement('span');
+      bar.appendChild(fill);
+      bar.addEventListener('mousemove', (e)=> showTip(e, `${p.value}%`));
+      bar.addEventListener('mouseleave', hideTip);
+      row.appendChild(label); row.appendChild(bar); pollBars.appendChild(row);
+    });
+
+    // Vendors table
+    const vendorTbody = document.getElementById('vendorTbody');
+    function renderVendors(filter = '') {
+      vendorTbody.innerHTML = vendors
+        .filter(v => v.name.toLowerCase().includes(filter.toLowerCase()))
+        .map(v => `
+          <tr>
+            <td>${v.name}</td>
+            <td>${v.category}</td>
+            <td>${v.sla}</td>
+            <td>${v.rating}</td>
+            <td>${v.sessions}</td>
+            <td><span class="pill ${v.status==='Active'?'success':'warning'}">${v.status}</span></td>
+          </tr>
+        `).join('');
+    }
+    renderVendors();
+
+    // Sponsors views
+    function barRow(label, value, max){
+      const pct = Math.round((value/max)*100);
+      return `
+        <div class="bar-row">
+          <div class="bar-label">${label}</div>
+          <div class="bar" style="--w:${pct}">
+            <span></span>
+          </div>
+        </div>
+      `;
+    }
+    const sponsorBars = document.getElementById('sponsorBars');
+    const maxImp = Math.max(...sponsors.map(s=>s.impressions));
+    sponsorBars.innerHTML = sponsors.map(s => barRow(s.name, s.impressions, maxImp)).join('');
+    const sponsorLeads = document.getElementById('sponsorLeads');
+    sponsorLeads.innerHTML = sponsors.map(s => `
+      <tr>
+        <td>${s.name}</td>
+        <td>${s.leads}</td>
+        <td>${s.ctr}</td>
+        <td><span class="pill ${s.status==='Primary'?'success':'warning'}">${s.status}</span></td>
+      </tr>
+    `).join('');
+
+    // Attendees: day bars
+    const dayBars = document.getElementById('dayBars');
+    const maxDay = Math.max(...attendees.byDay.map(d=>d.value));
+    dayBars.innerHTML = attendees.byDay.map(d => barRow(d.day, d.value, maxDay)).join('');
+
+    // Attendees: simple line (dots connected)
+    const engLine = document.getElementById('engLine');
+    function renderLine() {
+      const w = engLine.clientWidth || engLine.offsetWidth || 600;
+      const h = engLine.clientHeight || 160;
+      engLine.innerHTML = '';
+      const maxY = Math.max(...attendees.engagement.map(p=>p.y));
+      const minY = Math.min(...attendees.engagement.map(p=>p.y));
+      const svgNS = 'http://www.w3.org/2000/svg';
+      const svg = document.createElementNS(svgNS,'svg');
+      svg.setAttribute('width', w); svg.setAttribute('height', h); svg.style.display='block';
+      // path
+      const path = document.createElementNS(svgNS,'path');
+      const d = attendees.engagement.map((p,i)=>{
+        const x = (i/(attendees.engagement.length-1))*(w-16)+8;
+        const y = h - ((p.y-minY)/(maxY-minY))*(h-16) - 8;
+        return `${i===0?'M':'L'} ${x} ${y}`;
+      }).join(' ');
+      path.setAttribute('d', d);
+      path.setAttribute('fill','none');
+      path.setAttribute('stroke','url(#grad)');
+      path.setAttribute('stroke-width','2.5');
+      // gradient
+      const defs = document.createElementNS(svgNS,'defs');
+      const grad = document.createElementNS(svgNS,'linearGradient'); grad.setAttribute('id','grad'); grad.setAttribute('x1','0'); grad.setAttribute('x2','1'); grad.setAttribute('y1','0'); grad.setAttribute('y2','0');
+      const s1 = document.createElementNS(svgNS,'stop'); s1.setAttribute('offset','0%'); s1.setAttribute('stop-color','var(--accent-pink)');
+      const s2 = document.createElementNS(svgNS,'stop'); s2.setAttribute('offset','100%'); s2.setAttribute('stop-color','var(--accent-purple)');
+      grad.appendChild(s1); grad.appendChild(s2); defs.appendChild(grad);
+      svg.appendChild(defs); svg.appendChild(path);
+      // points
+      attendees.engagement.forEach((p,i)=>{
+        const cx = (i/(attendees.engagement.length-1))*(w-16)+8;
+        const cy = h - ((p.y-minY)/(maxY-minY))*(h-16) - 8;
+        const dot = document.createElementNS(svgNS,'circle');
+        dot.setAttribute('cx',cx); dot.setAttribute('cy',cy); dot.setAttribute('r','4');
+        dot.setAttribute('fill','var(--accent-teal)'); dot.setAttribute('stroke','var(--bg-secondary)'); dot.setAttribute('stroke-width','1');
+        dot.addEventListener('mousemove',(e)=> showTip(e, `Engagement ${p.y}`));
+        dot.addEventListener('mouseleave', hideTip);
+        svg.appendChild(dot);
+      });
+      engLine.appendChild(svg);
+    }
+    renderLine();
+    window.addEventListener('resize', renderLine);
+
+    // Tooltip helpers
+    function showTip(e, text){
+      tooltip.style.display='block';
+      tooltip.textContent = text;
+      const pad = 10;
+      tooltip.style.left = (e.clientX + pad) + 'px';
+      tooltip.style.top  = (e.clientY + pad) + 'px';
+    }
+    function hideTip(){ tooltip.style.display='none'; }
+
+    // Filters (simple client-side demonstration)
+    document.getElementById('searchInput').addEventListener('input', (e)=>{
+      renderVendors(e.target.value);
+    });
+
+    // Export CSV
+    document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
+      const rows = [
+        ['Metric','Value'],
+        ['Total Attendance', overview.checkedIn],
+        ['Capacity', overview.capacity],
+        ['Engagement Score', document.getElementById('kpiEngagement').textContent],
+        ...overview.poll.map(p => [`Poll ${p.label}`, p.value + '%'])
+      ];
+      const csv = rows.map(r => r.join(',')).join('\n');
+      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'analytics.csv'; a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // Export PDF (print)
+    document.getElementById('exportPdfBtn').addEventListener('click', ()=>{
+      window.print();
+    });
+  </script>
+</body>
+</html>

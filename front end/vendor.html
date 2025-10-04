@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vendor Management | EventHub</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-primary: #0a1628;
+      --bg-secondary: #132039;
+      --bg-card: rgba(19, 32, 57, 0.7);
+      --bg-card-hover: rgba(19, 32, 57, 0.9);
+      --text-primary: #ffffff;
+      --text-secondary: #a0aec0;
+      --text-muted: #718096;
+      --accent-pink: #e91e8c;
+      --accent-purple: #9333ea;
+      --accent-teal: #14b8a6;
+      --border-color: rgba(255, 255, 255, 0.1);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    [data-theme="light"] {
+      --bg-primary: #f7fafc;
+      --bg-secondary: #edf2f7;
+      --bg-card: rgba(255, 255, 255, 0.9);
+      --bg-card-hover: rgba(255, 255, 255, 1);
+      --text-primary: #1a202c;
+      --text-secondary: #4a5568;
+      --text-muted: #718096;
+      --border-color: rgba(0, 0, 0, 0.1);
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 20% 30%, rgba(20, 184, 166, 0.15) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 70%, rgba(147, 51, 234, 0.15) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .page-container {
+      position: relative;
+      z-index: 1;
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(233, 30, 140, 0.4);
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      backdrop-filter: blur(10px);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent-pink);
+    }
+
+    .btn-small {
+      padding: 0.5rem 1rem;
+      font-size: 0.75rem;
+    }
+
+    .theme-toggle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      transition: all 0.3s ease;
+    }
+
+    .theme-toggle:hover {
+      transform: rotate(20deg);
+      border-color: var(--accent-pink);
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 250px;
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 0.75rem 1rem 0.75rem 2.5rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--accent-pink);
+      box-shadow: 0 0 0 3px rgba(233, 30, 140, 0.1);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .filter-btn:hover {
+      border-color: var(--accent-pink);
+      color: var(--text-primary);
+    }
+
+    .filter-btn.active {
+      background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+      color: white;
+      border-color: transparent;
+    }
+
+    .view-toggle {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .view-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .view-btn:hover,
+    .view-btn.active {
+      border-color: var(--accent-pink);
+      color: var(--accent-pink);
+    }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.25rem;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+      border-color: var(--accent-pink);
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    /* Vendor Grid */
+    .vendor-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .vendor-grid.list-view {
+      grid-template-columns: 1fr;
+    }
+
+    .vendor-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+      animation: fadeInUp 0.5s ease-out;
+    }
+
+    .vendor-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow);
+      border-color: var(--accent-pink);
+    }
+
+    .vendor-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+
+    .vendor-info h3 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .vendor-category {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.375rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .status-confirmed {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--success);
+    }
+
+    .status-inprogress {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--warning);
+    }
+
+    .status-pending {
+      background: rgba(148, 163, 184, 0.2);
+      color: var(--text-secondary);
+    }
+
+    .vendor-details {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.875rem;
+    }
+
+    .detail-label {
+      color: var(--text-muted);
+    }
+
+    .detail-value {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .vendor-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      border: none;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-width: fit-content;
+    }
+
+    .action-btn-primary {
+      background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+      color: white;
+    }
+
+    .action-btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(233, 30, 140, 0.3);
+    }
+
+    .action-btn-danger {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .action-btn-danger:hover {
+      background: rgba(239, 68, 68, 0.3);
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-header h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .close-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--border-color);
+      background: transparent;
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .close-btn:hover {
+      background: var(--bg-card);
+      border-color: var(--accent-pink);
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .form-input,
+    .form-select {
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      transition: all 0.3s ease;
+    }
+
+    .form-input:focus,
+    .form-select:focus {
+      outline: none;
+      border-color: var(--accent-pink);
+      box-shadow: 0 0 0 3px rgba(233, 30, 140, 0.1);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .form-actions .btn {
+      flex: 1;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .page-container {
+        padding: 1rem;
+      }
+
+      .header h1 {
+        font-size: 1.5rem;
+      }
+
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .search-box {
+        width: 100%;
+      }
+
+      .vendor-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .modal-content {
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container">
+     Header 
+    <header class="header">
+      <h1>Vendor Management</h1>
+      <div class="header-actions">
+        <button class="btn btn-primary" onclick="openAddModal()">
+          <span>+</span>
+          <span>Add Vendor</span>
+        </button>
+        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+          <span id="themeIcon">☀</span>
+        </button>
+      </div>
+    </header>
+
+     Stats 
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Vendors</div>
+        <div class="stat-value" id="totalVendors">12</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Confirmed</div>
+        <div class="stat-value" id="confirmedVendors">7</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">In Progress</div>
+        <div class="stat-value" id="inprogressVendors">3</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pending</div>
+        <div class="stat-value" id="pendingVendors">2</div>
+      </div>
+    </div>
+
+     Controls 
+    <div class="controls">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Search vendors..." oninput="filterVendors()">
+      </div>
+
+      <div class="filter-group">
+        <button class="filter-btn active" data-category="all" onclick="setFilter('all')">All</button>
+        <button class="filter-btn" data-category="catering" onclick="setFilter('catering')">Catering</button>
+        <button class="filter-btn" data-category="av" onclick="setFilter('av')">Audio/Visual</button>
+        <button class="filter-btn" data-category="decoration" onclick="setFilter('decoration')">Decoration</button>
+        <button class="filter-btn" data-category="transport" onclick="setFilter('transport')">Transport</button>
+      </div>
+
+      <div class="view-toggle">
+        <button class="view-btn active" onclick="setView('grid')" aria-label="Grid view">⊞</button>
+        <button class="view-btn" onclick="setView('list')" aria-label="List view">☰</button>
+      </div>
+    </div>
+
+     
+    <div class="vendor-grid" id="vendorGrid">
+       
+    </div>
+
+    
+    <div class="modal" id="vendorModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modalTitle">Add New Vendor</h2>
+          <button class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <form id="vendorForm" onsubmit="saveVendor(event)">
+          <div class="form-group">
+            <label class="form-label" for="vendorName">Vendor Name</label>
+            <input type="text" class="form-input" id="vendorName" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="vendorCategory">Category</label>
+            <select class="form-select" id="vendorCategory" required>
+              <option value="">Select category</option>
+              <option value="catering">Catering</option>
+              <option value="av">Audio/Visual</option>
+              <option value="decoration">Decoration</option>
+              <option value="transport">Transport</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="vendorContact">Contact</label>
+            <input type="text" class="form-input" id="vendorContact" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="vendorPayment">Payment Amount</label>
+            <input type="text" class="form-input" id="vendorPayment" placeholder="₹50,000" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="vendorDeadline">Deadline</label>
+            <input type="date" class="form-input" id="vendorDeadline" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="vendorStatus">Status</label>
+            <select class="form-select" id="vendorStatus" required>
+              <option value="pending">Pending</option>
+              <option value="inprogress">In Progress</option>
+              <option value="confirmed">Confirmed</option>
+            </select>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Vendor</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Sample vendor data
+    let vendors = [
+      {
+        id: 1,
+        name: 'Delicious Bites Catering',
+        category: 'catering',
+        contact: '+91 98765 43210',
+        payment: '₹1,50,000',
+        deadline: '2025-10-15',
+        status: 'confirmed'
+      },
+      {
+        id: 2,
+        name: 'SoundWave AV Solutions',
+        category: 'av',
+        contact: '+91 98765 43211',
+        payment: '₹65,000',
+        deadline: '2025-10-20',
+        status: 'inprogress'
+      },
+      {
+        id: 3,
+        name: 'Elegant Decor Co.',
+        category: 'decoration',
+        contact: '+91 98765 43212',
+        payment: '₹80,000',
+        deadline: '2025-10-18',
+        status: 'confirmed'
+      },
+      {
+        id: 4,
+        name: 'Swift Transport Services',
+        category: 'transport',
+        contact: '+91 98765 43213',
+        payment: '₹25,000',
+        deadline: '2025-10-25',
+        status: 'pending'
+      },
+      {
+        id: 5,
+        name: 'PromoGenius Marketing',
+        category: 'catering',
+        contact: '+91 98765 43214',
+        payment: '₹40,000',
+        deadline: '2025-10-10',
+        status: 'confirmed'
+      },
+      {
+        id: 6,
+        name: 'LightMasters AV',
+        category: 'av',
+        contact: '+91 98765 43215',
+        payment: '₹55,000',
+        deadline: '2025-10-22',
+        status: 'inprogress'
+      },
+      {
+        id: 7,
+        name: 'FlowerPower Decorations',
+        category: 'decoration',
+        contact: '+91 98765 43216',
+        payment: '₹35,000',
+        deadline: '2025-10-17',
+        status: 'confirmed'
+      },
+      {
+        id: 8,
+        name: 'City Cabs Transport',
+        category: 'transport',
+        contact: '+91 98765 43217',
+        payment: '₹30,000',
+        deadline: '2025-10-26',
+        status: 'pending'
+      },
+      {
+        id: 9,
+        name: 'Gourmet Kitchen Catering',
+        category: 'catering',
+        contact: '+91 98765 43218',
+        payment: '₹1,20,000',
+        deadline: '2025-10-14',
+        status: 'confirmed'
+      },
+      {
+        id: 10,
+        name: 'TechSound Pro',
+        category: 'av',
+        contact: '+91 98765 43219',
+        payment: '₹70,000',
+        deadline: '2025-10-21',
+        status: 'inprogress'
+      },
+      {
+        id: 11,
+        name: 'DreamScape Decor',
+        category: 'decoration',
+        contact: '+91 98765 43220',
+        payment: '₹45,000',
+        deadline: '2025-10-19',
+        status: 'confirmed'
+      },
+      {
+        id: 12,
+        name: 'Premium Transport Co.',
+        category: 'transport',
+        contact: '+91 98765 43221',
+        payment: '₹35,000',
+        deadline: '2025-10-24',
+        status: 'confirmed'
+      }
+    ];
+
+    let currentFilter = 'all';
+    let currentView = 'grid';
+    let editingVendorId = null;
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      document.getElementById('themeIcon').textContent = savedTheme === 'light' ? '🌙' : '☀';
+      
+      renderVendors();
+      updateStats();
+    });
+
+    // Theme Toggle
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      html.setAttribute('data-theme', newTheme);
+      document.getElementById('themeIcon').textContent = newTheme === 'light' ? '🌙' : '☀';
+      localStorage.setItem('theme', newTheme);
+    }
+
+    // Render vendors
+    function renderVendors() {
+      const grid = document.getElementById('vendorGrid');
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      
+      const filteredVendors = vendors.filter(vendor => {
+        const matchesFilter = currentFilter === 'all' || vendor.category === currentFilter;
+        const matchesSearch = vendor.name.toLowerCase().includes(searchTerm) || 
+                            vendor.category.toLowerCase().includes(searchTerm);
+        return matchesFilter && matchesSearch;
+      });
+
+      grid.innerHTML = filteredVendors.map(vendor => `
+        <div class="vendor-card">
+          <div class="vendor-header">
+            <div class="vendor-info">
+              <h3>${vendor.name}</h3>
+              <div class="vendor-category">
+                <span>${getCategoryIcon(vendor.category)}</span>
+                <span>${formatCategory(vendor.category)}</span>
+              </div>
+            </div>
+            <span class="status-badge status-${vendor.status}">
+              ${getStatusIcon(vendor.status)} ${formatStatus(vendor.status)}
+            </span>
+          </div>
+          <div class="vendor-details">
+            <div class="detail-row">
+              <span class="detail-label">Contact</span>
+              <span class="detail-value">${vendor.contact}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Payment</span>
+              <span class="detail-value">${vendor.payment}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Deadline</span>
+              <span class="detail-value">${formatDate(vendor.deadline)}</span>
+            </div>
+          </div>
+          <div class="vendor-actions">
+            <button class="action-btn action-btn-primary" onclick="changeStatus(${vendor.id})">
+              Change Status
+            </button>
+            <button class="action-btn action-btn-primary btn-small" onclick="editVendor(${vendor.id})">
+              Edit
+            </button>
+            <button class="action-btn action-btn-danger btn-small" onclick="removeVendor(${vendor.id})">
+              Remove
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      if (filteredVendors.length === 0) {
+        grid.innerHTML = '<p style="text-align: center; color: var(--text-muted); grid-column: 1 / -1; padding: 2rem;">No vendors found</p>';
+      }
+    }
+
+    // Update stats
+    function updateStats() {
+      document.getElementById('totalVendors').textContent = vendors.length;
+      document.getElementById('confirmedVendors').textContent = vendors.filter(v => v.status === 'confirmed').length;
+      document.getElementById('inprogressVendors').textContent = vendors.filter(v => v.status === 'inprogress').length;
+      document.getElementById('pendingVendors').textContent = vendors.filter(v => v.status === 'pending').length;
+    }
+
+    // Filter vendors
+    function setFilter(category) {
+      currentFilter = category;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.category === category);
+      });
+      renderVendors();
+    }
+
+    function filterVendors() {
+      renderVendors();
+    }
+
+    // View toggle
+    function setView(view) {
+      currentView = view;
+      const grid = document.getElementById('vendorGrid');
+      grid.classList.toggle('list-view', view === 'list');
+      document.querySelectorAll('.view-btn').forEach((btn, index) => {
+        btn.classList.toggle('active', (view === 'grid' && index === 0) || (view === 'list' && index === 1));
+      });
+    }
+
+    // Modal functions
+    function openAddModal() {
+      editingVendorId = null;
+      document.getElementById('modalTitle').textContent = 'Add New Vendor';
+      document.getElementById('vendorForm').reset();
+      document.getElementById('vendorModal').classList.add('active');
+    }
+
+    function editVendor(id) {
+      const vendor = vendors.find(v => v.id === id);
+      if (!vendor) return;
+
+      editingVendorId = id;
+      document.getElementById('modalTitle').textContent = 'Edit Vendor';
+      document.getElementById('vendorName').value = vendor.name;
+      document.getElementById('vendorCategory').value = vendor.category;
+      document.getElementById('vendorContact').value = vendor.contact;
+      document.getElementById('vendorPayment').value = vendor.payment;
+      document.getElementById('vendorDeadline').value = vendor.deadline;
+      document.getElementById('vendorStatus').value = vendor.status;
+      document.getElementById('vendorModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('vendorModal').classList.remove('active');
+      editingVendorId = null;
+    }
+
+    function saveVendor(event) {
+      event.preventDefault();
+      
+      const vendorData = {
+        name: document.getElementById('vendorName').value,
+        category: document.getElementById('vendorCategory').value,
+        contact: document.getElementById('vendorContact').value,
+        payment: document.getElementById('vendorPayment').value,
+        deadline: document.getElementById('vendorDeadline').value,
+        status: document.getElementById('vendorStatus').value
+      };
+
+      if (editingVendorId) {
+        const index = vendors.findIndex(v => v.id === editingVendorId);
+        vendors[index] = { ...vendors[index], ...vendorData };
+      } else {
+        const newId = Math.max(...vendors.map(v => v.id)) + 1;
+        vendors.push({ id: newId, ...vendorData });
+      }
+
+      closeModal();
+      renderVendors();
+      updateStats();
+    }
+
+    function removeVendor(id) {
+      if (confirm('Are you sure you want to remove this vendor?')) {
+        vendors = vendors.filter(v => v.id !== id);
+        renderVendors();
+        updateStats();
+      }
+    }
+
+    function changeStatus(id) {
+      const vendor = vendors.find(v => v.id === id);
+      if (!vendor) return;
+
+      const statuses = ['pending', 'inprogress', 'confirmed'];
+      const currentIndex = statuses.indexOf(vendor.status);
+      const nextIndex = (currentIndex + 1) % statuses.length;
+      vendor.status = statuses[nextIndex];
+
+      renderVendors();
+      updateStats();
+    }
+
+    // Helper functions
+    function getCategoryIcon(category) {
+      const icons = {
+        catering: '🍽️',
+        av: '🎤',
+        decoration: '🎨',
+        transport: '🚗'
+      };
+      return icons[category] || '📦';
+    }
+
+    function formatCategory(category) {
+      const names = {
+        catering: 'Catering',
+        av: 'Audio/Visual',
+        decoration: 'Decoration',
+        transport: 'Transport'
+      };
+      return names[category] || category;
+    }
+
+    function getStatusIcon(status) {
+      const icons = {
+        confirmed: '✔',
+        inprogress: '🚚',
+        pending: '⏳'
+      };
+      return icons[status] || '';
+    }
+
+    function formatStatus(status) {
+      const names = {
+        confirmed: 'Confirmed',
+        inprogress: 'In Progress',
+        pending: 'Pending'
+      };
+      return names[status] || status;
+    }
+
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    // Close modal on outside click
+    document.getElementById('vendorModal').addEventListener('click', (e) => {
+      if (e.target.id === 'vendorModal') {
+        closeModal();
+      }
+    });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.getElementById('vendorModal').classList.contains('active')) {
+        closeModal();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SPOC Communication</title>
+  <style>
+    /* Theme (5 colors total): primary purple, magenta + teal accents, deep bg, off-white text */
+    :root{
+      --bg: #0b1020;
+      --bg-elev: #12182a;
+      --text: #eef2f7;
+      --muted: #9aa4b2;
+      --primary: #7c3aed; /* purple */
+      --accent-magenta: #ec4899;
+      --accent-teal: #14b8a6;
+      --radius: 12px;
+      --shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+      color:var(--text);
+      background: radial-gradient(1200px 800px at 75% 20%, rgba(124,58,237,.18), transparent 60%),
+                  radial-gradient(800px 600px at 20% 80%, rgba(236,72,153,.15), transparent 70%),
+                  radial-gradient(900px 700px at 10% 10%, rgba(20,184,166,.12), transparent 65%),
+                  var(--bg);
+    }
+
+    /* Subtle overlay using the provided image to echo the brand theme */
+    body::before{
+      content:"";
+      position:fixed; inset:0;
+      background-image: url("https://hebbkx1anhila5yf.public.blob.vercel-storage.com/online-UcOfc5w9LM8Vbb8P13SmV3UTOqF0pC.jpg");
+      background-size: cover;
+      background-position: center;
+      opacity:.12; /* keep it subtle */
+      pointer-events:none;
+      filter: saturate(110%) blur(1px);
+    }
+
+    .app{
+      position:relative;
+      display:grid;
+      grid-template-columns: 280px 1fr;
+      height:100%;
+      max-width:1400px;
+      margin:0 auto;
+      backdrop-filter: blur(2px);
+    }
+
+    /* Sidebar */
+    .sidebar{
+      border-right:1px solid rgba(255,255,255,.06);
+      background: linear-gradient(180deg, rgba(18,24,42,.85), rgba(11,16,32,.85));
+      padding:18px 12px;
+      overflow:auto;
+    }
+    .sidebar h2{
+      margin:8px 10px 14px;
+      font-size:14px;
+      letter-spacing:.08em;
+      text-transform: uppercase;
+      color:var(--muted);
+    }
+    .role-list{
+      list-style:none; margin:0; padding:0;
+      display:flex; flex-direction:column; gap:8px;
+    }
+    .role{
+      display:flex; align-items:center; gap:10px;
+      padding:12px 12px;
+      border-radius:10px;
+      background: transparent;
+      border:1px solid transparent;
+      color:var(--text);
+      cursor:pointer;
+      transition: all .18s ease;
+    }
+    .role:hover{
+      background: rgba(255,255,255,.04);
+      border-color: rgba(255,255,255,.06);
+    }
+    .role.active{
+      background: linear-gradient(90deg, rgba(124,58,237,.28), rgba(236,72,153,.22));
+      border-color: rgba(124,58,237,.45);
+      box-shadow: 0 6px 20px rgba(124,58,237,.18);
+    }
+    .dot{
+      width:10px; height:10px; border-radius:50%;
+      background: var(--accent-teal);
+      box-shadow: 0 0 0 3px rgba(20,184,166,.2);
+      flex:0 0 auto;
+    }
+    .role[data-role="Organizer"] .dot{ background: var(--primary) }
+    .role[data-role="Vendor"] .dot{ background: var(--accent-teal) }
+    .role[data-role="Sponsor"] .dot{ background: var(--accent-magenta) }
+    .role[data-role="Attendee"] .dot{ background: #8892a6 }
+
+    .role .name{ font-weight:600 }
+    .role .meta{
+      margin-left:auto; font-size:12px; color:var(--muted);
+      padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.08);
+    }
+
+    /* Chat area */
+    .chat{
+      display:grid; grid-template-rows: auto 1fr auto;
+      height:100%;
+      background: linear-gradient(180deg, rgba(12,17,34,.45), rgba(12,17,34,.65));
+    }
+
+    .chat-header{
+      display:flex; align-items:center; gap:12px; justify-content:space-between;
+      padding:14px 18px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      background: linear-gradient(90deg, rgba(18,24,42,.7), rgba(18,24,42,.4));
+      position:sticky; top:0; z-index:2;
+    }
+    .title{
+      display:flex; align-items:center; gap:10px;
+      font-weight:700;
+    }
+    .title .tag{
+      font-size:12px; letter-spacing:.06em; text-transform:uppercase;
+      color:var(--muted);
+      border:1px solid rgba(255,255,255,.12);
+      padding:3px 8px; border-radius:999px;
+    }
+
+    .toolbar{
+      display:flex; gap:8px;
+    }
+    .btn-ghost{
+      background:transparent; color:var(--text);
+      border:1px solid rgba(255,255,255,.1);
+      padding:8px 10px; border-radius:10px; cursor:pointer;
+    }
+    .btn-ghost:hover{ background: rgba(255,255,255,.06) }
+
+    .messages{
+      padding:20px 18px 10px;
+      overflow:auto;
+      display:flex; flex-direction:column; gap:10px;
+    }
+
+    /* Assistant guidance block */
+    .assistant-tip{
+      align-self:center;
+      max-width:780px; width:100%;
+      background: linear-gradient(115deg, rgba(124,58,237,.18), rgba(20,184,166,.12));
+      border:1px solid rgba(124,58,237,.35);
+      padding:14px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .assistant-tip .head{
+      display:flex; align-items:center; gap:10px; margin-bottom:6px;
+      font-weight:700; color:#e8defb;
+    }
+    .assistant-tip .suggestions{
+      display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;
+    }
+    .chip{
+      font-size:12px; color:var(--text);
+      border:1px solid rgba(255,255,255,.18);
+      padding:6px 10px; border-radius:999px; cursor:pointer;
+      background: rgba(255,255,255,.04);
+    }
+    .chip:hover{ background: rgba(255,255,255,.08) }
+
+    /* Message bubbles */
+    .row{ display:flex; gap:10px; align-items:flex-end; }
+    .row.me{ justify-content:flex-end }
+    .bubble{
+      max-width:70%;
+      padding:10px 12px;
+      border-radius:16px;
+      line-height:1.35;
+      border:1px solid rgba(255,255,255,.06);
+      box-shadow: 0 8px 24px rgba(0,0,0,.25);
+    }
+    .row.other .bubble{
+      background: var(--bg-elev);
+      border-color: rgba(255,255,255,.08);
+    }
+    .row.me .bubble{
+      background: linear-gradient(135deg, rgba(124,58,237,.9), rgba(236,72,153,.9));
+      border: 1px solid rgba(236,72,153,.5);
+    }
+    .meta-line{
+      font-size:11px; color:var(--muted);
+      margin-top:4px;
+    }
+
+    /* Composer */
+    .composer{
+      display:flex; gap:10px; align-items:center;
+      padding:12px 16px; border-top:1px solid rgba(255,255,255,.06);
+      background: linear-gradient(90deg, rgba(18,24,42,.7), rgba(18,24,42,.4));
+      position:sticky; bottom:0; z-index:2;
+    }
+    .input{
+      flex:1; display:flex; align-items:center; gap:8px;
+      background: rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.1);
+      border-radius: 999px;
+      padding:8px 12px 8px 14px;
+    }
+    .input input{
+      flex:1; border:none; outline:none; background:transparent; color:var(--text);
+      font-size:15px;
+    }
+    .send{
+      border:none; cursor:pointer; color:white;
+      background: linear-gradient(135deg, var(--primary), var(--accent-magenta));
+      padding:10px 16px; border-radius:999px; font-weight:700;
+      box-shadow: 0 8px 24px rgba(124,58,237,.35);
+      transition: transform .06s ease;
+    }
+    .send:active{ transform: translateY(1px) }
+
+    /* Responsive */
+    @media (max-width: 900px){
+      .app{ grid-template-columns: 72px 1fr }
+      .role .name, .role .meta{ display:none }
+      .role{ justify-content:center }
+    }
+    @media (max-width: 600px){
+      .assistant-tip{ display:none } /* keep mobile minimal */
+      .bubble{ max-width: 80% }
+    }
+
+    /* Visually hidden for a11y */
+    .sr-only{
+      position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
+      clip:rect(0,0,0,0); white-space:nowrap; border:0;
+    }
+  </style>
+</head>
+<body>
+  <a class="sr-only" href="#composer-input">Skip to message input</a>
+
+  <div class="app" role="application" aria-label="SPOC Communication">
+    <aside class="sidebar" aria-label="Roles">
+      <h2>Roles</h2>
+      <ul class="role-list" id="roleList">
+        <li class="role active" data-role="Organizer" tabindex="0" role="button" aria-pressed="true">
+          <span class="dot"></span><span class="name">Organizer</span><span class="meta">SPOC</span>
+        </li>
+        <li class="role" data-role="Vendor" tabindex="0" role="button" aria-pressed="false">
+          <span class="dot"></span><span class="name">Vendor</span><span class="meta">3 online</span>
+        </li>
+        <li class="role" data-role="Sponsor" tabindex="0" role="button" aria-pressed="false">
+          <span class="dot"></span><span class="name">Sponsor</span><span class="meta">2 online</span>
+        </li>
+        <li class="role" data-role="Attendee" tabindex="0" role="button" aria-pressed="false">
+          <span class="dot"></span><span class="name">Attendee</span><span class="meta">24 online</span>
+        </li>
+      </ul>
+    </aside>
+
+    <main class="chat" aria-label="Chat window">
+      <header class="chat-header">
+        <div class="title">
+          <span class="dot" id="roleDot"></span>
+          <div>
+            <div id="roleTitle" style="font-size:16px">Organizer</div>
+            <div class="meta-line" id="roleSubtitle">Single Point of Contact</div>
+          </div>
+          <span class="tag">SPOC</span>
+        </div>
+        <div class="toolbar">
+          <button class="btn-ghost" id="clearBtn" title="Clear messages">Clear</button>
+        </div>
+      </header>
+
+      <section class="messages" id="messages" aria-live="polite" aria-relevant="additions">
+         Assistant / Guidance placeholder 
+        <div class="assistant-tip" id="assistantTip" role="note" aria-label="Assistant guidance">
+          <div class="head">Assistant guidance</div>
+          <div class="body">Use prompts or quick actions to draft updates and requests.</div>
+          <div class="suggestions">
+            <button class="chip" data-suggest="Share today’s timeline with vendors">Share today’s timeline with vendors</button>
+            <button class="chip" data-suggest="Ask sponsors for logo assets and brand guide">Ask sponsors for logo assets and brand guide</button>
+            <button class="chip" data-suggest="Post venue arrival instructions for attendees">Post venue arrival instructions for attendees</button>
+          </div>
+        </div>
+         Chat messages will render here 
+      </section>
+
+      <form class="composer" id="composer" autocomplete="off">
+        <label class="sr-only" for="composer-input">Type a message</label>
+        <div class="input">
+          <input id="composer-input" name="message" placeholder="Message the Organizer…" />
+        </div>
+        <button class="send" type="submit" aria-label="Send message">Send</button>
+      </form>
+    </main>
+  </div>
+
+  <script>
+    // Simple in-memory + localStorage store per role
+    const STORAGE_KEY = 'spoc_messages_v1';
+    const defaultData = {
+      Organizer: [
+        { who:'other', text:'Welcome to the event SPOC chat. How can I help?', at: Date.now()-3600e3 },
+        { who:'me', text:'I’ll share setup details with vendors first.', at: Date.now()-3400e3 }
+      ],
+      Vendor: [
+        { who:'other', text:'Vendor ops here. Please send load-in timings.', at: Date.now()-3200e3 }
+      ],
+      Sponsor: [
+        { who:'other', text:'Sponsor desk: do you need revised banner sizes?', at: Date.now()-3000e3 }
+      ],
+      Attendee: [
+        { who:'other', text:'Attendee help: parking and entry details?', at: Date.now()-2800e3 }
+      ]
+    };
+
+    const state = {
+      selectedRole: 'Organizer',
+      data: load()
+    };
+
+    const roleList = document.getElementById('roleList');
+    const roleTitle = document.getElementById('roleTitle');
+    const roleSubtitle = document.getElementById('roleSubtitle');
+    const roleDot = document.getElementById('roleDot');
+    const messagesEl = document.getElementById('messages');
+    const composer = document.getElementById('composer');
+    const input = document.getElementById('composer-input');
+    const clearBtn = document.getElementById('clearBtn');
+
+    function load(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : structuredClone(defaultData);
+      }catch(_){ return structuredClone(defaultData); }
+    }
+    function persist(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
+    }
+
+    function fmtTime(ts){
+      const d = new Date(ts);
+      return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    }
+
+    function roleColor(role){
+      switch(role){
+        case 'Organizer': return 'var(--primary)';
+        case 'Vendor': return 'var(--accent-teal)';
+        case 'Sponsor': return 'var(--accent-magenta)';
+        case 'Attendee': return '#8892a6';
+        default: return 'var(--accent-teal)';
+      }
+    }
+
+    function setRole(role){
+      state.selectedRole = role;
+      // update sidebar selection
+      document.querySelectorAll('.role').forEach(li=>{
+        const active = li.getAttribute('data-role') === role;
+        li.classList.toggle('active', active);
+        li.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+      // header + input
+      roleTitle.textContent = role;
+      roleSubtitle.textContent = role === 'Organizer' ? 'Single Point of Contact' : `${role} Channel`;
+      roleDot.style.background = roleColor(role);
+      input.placeholder = `Message the ${role}…`;
+      // render messages
+      renderMessages();
+    }
+
+    function renderMessages(){
+      // Keep assistant tip as the first element; remove existing rows
+      const tip = document.getElementById('assistantTip');
+      messagesEl.innerHTML = '';
+      messagesEl.appendChild(tip);
+      const list = state.data[state.selectedRole] || [];
+      list.forEach(msg=>{
+        messagesEl.appendChild(renderRow(msg));
+      });
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function renderRow({who, text, at}){
+      const row = document.createElement('div');
+      row.className = `row ${who === 'me' ? 'me':'other'}`;
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.textContent = text;
+      const meta = document.createElement('div');
+      meta.className = 'meta-line';
+      meta.textContent = fmtTime(at || Date.now());
+      const wrap = document.createElement('div');
+      wrap.appendChild(bubble);
+      wrap.appendChild(meta);
+      row.appendChild(wrap);
+      return row;
+    }
+
+    // Sidebar interactions
+    roleList.addEventListener('click', e=>{
+      const li = e.target.closest('.role');
+      if(!li) return;
+      setRole(li.getAttribute('data-role'));
+    });
+    roleList.addEventListener('keydown', e=>{
+      if(e.key === 'Enter' || e.key === ' '){
+        const li = e.target.closest('.role');
+        if(li){ e.preventDefault(); setRole(li.getAttribute('data-role')); }
+      }
+    });
+
+    // Suggestions fill input
+    document.querySelectorAll('.chip').forEach(chip=>{
+      chip.addEventListener('click', ()=>{
+        input.value = chip.dataset.suggest;
+        input.focus();
+      });
+    });
+
+    // Composer
+    composer.addEventListener('submit', e=>{
+      e.preventDefault();
+      const text = input.value.trim();
+      if(!text) return;
+      const role = state.selectedRole;
+      state.data[role] = state.data[role] || [];
+      state.data[role].push({ who:'me', text, at: Date.now() });
+      persist();
+      input.value = '';
+      // Render append optimistically
+      messagesEl.appendChild(renderRow({ who:'me', text, at: Date.now() }));
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+
+      // Optional: Simulated auto-reply for demo clarity
+      setTimeout(()=>{
+        const reply = { who:'other', text:'Got it. Thanks!', at: Date.now() };
+        state.data[role].push(reply);
+        persist();
+        // Only show if still in same role
+        if(state.selectedRole === role){
+          messagesEl.appendChild(renderRow(reply));
+          messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+      }, 600);
+    });
+
+    // Clear messages for current role
+    clearBtn.addEventListener('click', ()=>{
+      const role = state.selectedRole;
+      if(confirm(`Clear messages in ${role}?`)){
+        state.data[role] = [];
+        persist();
+        renderMessages();
+      }
+    });
+
+    // Init
+    setRole(state.selectedRole);
+  </script>
+</body>
+</html>
