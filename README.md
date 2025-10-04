@@ -167,7 +167,7 @@ eventhub/
 │       ├── global.css
 │       └── dashboard.css
 ├── server.py                # Simple HTTP server
-└── TODO.md                  # Pending tasks
+
 ```
 
 ## Contributing
@@ -178,11 +178,7 @@ eventhub/
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-### Pending Tasks (from TODO.md)
-- Update backend/main.py to include AuthenticationRouter
-- Update front end/login.html to add theme toggle
-- Update front end/signup.html to add theme toggle and client validation
-- Test the changes
+
 
 ## License
 
